@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BulkGallery — Generate Certificates & Designs in Bulk</title>
+<meta name="description" content="A free tool to generate hundreds of certificates and designs at once from a template and a CSV file — runs entirely in your browser, nothing is uploaded to any server." />
+<link rel="canonical" href="https://bulkgallery.com/index.html" />
+<!--
+  Paste your Google AdSense site-verification script here once you have a publisher ID:
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Tajawal:wght@400;500;700&family=Amiri&family=Almarai:wght@400;700&family=Reem+Kufi&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* ================================================================
+   DESIGN SYSTEM — "Khitm" (the seal)
+   Concept: an official-document production tool, so the identity
+   borrows from certificate sealing: dark ink chrome + a single gold
+   accent, warm paper canvas, and a fine guilloche-style texture —
+   the same kind of engraved line pattern used on real certificates
+   and currency to prevent forgery.
+   ================================================================ */
+:root{
+  --ink-950:#0E0C15;
+  --ink-900:#17141F;
+  --ink-800:#211D2C;
+  --ink-700:#332C40;
+  --ink-line:rgba(228,196,104,0.16);
+
+  --gold-300:#F0D896;
+  --gold-400:#E4C468;
+  --gold-500:#C9973A;
+  --gold-600:#A87927;
+
+  --paper-50:#FBF8F1;
+  --paper-100:#F3EDDF;
+  --paper-line:rgba(38,35,47,0.12);
+
+  --text-on-dark:#EFE9DA;
+  --text-on-dark-muted:#9891A3;
+  --text-on-paper:#241F2E;
+  --text-on-paper-muted:#7A7387;
+
+  --success:#3FA66B;
+  --danger:#D9534F;
+
+  --r-sm:8px; --r-md:14px; --r-lg:22px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-8:32px;
+  --shadow-sm:0 1px 3px rgba(14,12,21,0.10);
+  --shadow-md:0 8px 24px rgba(14,12,21,0.14);
+  --shadow-lg:0 20px 48px rgba(14,12,21,0.28);
+  --sidebar-w:372px;
+}
+
+/* Dark mode: only the "paper" workspace + content chrome shift — the
+   certificate canvas itself always stays true white, since that is
+   the actual document being designed and must render/print accurately. */
+html[data-theme="dark"]{
+  --paper-50:#14121C;
+  --paper-100:#1E1B29;
+  --paper-line:rgba(228,196,104,0.16);
+  --text-on-paper:#EFE9DA;
+  --text-on-paper-muted:#A79FBD;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:'Tajawal', system-ui, sans-serif;
+  color:var(--text-on-paper);
+  background:var(--ink-950);
+  -webkit-font-smoothing:antialiased;
+}
+button, input, select{ font-family:inherit; }
+::selection{ background:var(--gold-300); color:var(--ink-950); }
+button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible{
+  outline:2px solid var(--gold-500);
+  outline-offset:2px;
+}
+svg{ display:block; }
+
+.app-shell{ display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+/* ================================================================
+   TOPBAR
+   ================================================================ */
+.topbar{
+  height:60px; flex-shrink:0;
+  background:var(--ink-950);
+  border-bottom:1px solid var(--ink-line);
+  display:flex; align-items:center; gap:14px;
+  padding-inline:24px;
+  position:relative; z-index:20;
+  background-image: repeating-radial-gradient(circle at 92% 50%, rgba(228,196,104,0.10) 0 1.5px, transparent 1.5px 9px);
+}
+.brand{ display:flex; align-items:center; gap:10px; text-decoration:none; flex-shrink:0; }
+.brand .seal-mark{ width:30px; height:30px; }
+.brand-text{ font-family:'Cairo',sans-serif; font-weight:800; font-size:16px; color:var(--text-on-dark); letter-spacing:0.01em; }
+.topbar .subtitle{ font-size:11.5px; color:var(--text-on-dark-muted); }
+.topbar-actions{ margin-inline-start:auto; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+
+.icon-btn-top{
+  width:32px; height:32px; border-radius:50%;
+  border:1px solid var(--ink-line); background:transparent; color:var(--text-on-dark);
+  cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px;
+  transition:border-color .12s ease;
+}
+.icon-btn-top:hover{ border-color:var(--gold-500); }
+.lang-switch{ display:flex; background:var(--ink-800); border:1px solid var(--ink-line); border-radius:999px; padding:2px; }
+.lang-btn{
+  background:transparent; border:none; color:var(--text-on-dark-muted);
+  font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:999px; cursor:pointer;
+  font-family:'Cairo',sans-serif;
+}
+.lang-btn.active{ background:var(--gold-500); color:var(--ink-950); }
+
+.app{ flex:1; display:flex; min-height:0; }
+
+/* ================================================================
+   SIDEBAR
+   ================================================================ */
+.sidebar{
+  width:var(--sidebar-w); flex-shrink:0;
+  background:var(--ink-900);
+  border-inline-end:1px solid var(--ink-line);
+  overflow-y:auto; display:flex; flex-direction:column;
+  color:var(--text-on-dark);
+}
+.sidebar::-webkit-scrollbar{ width:8px; }
+.sidebar::-webkit-scrollbar-thumb{ background:var(--ink-700); border-radius:8px; }
+
+.step{ padding:var(--sp-6) var(--sp-6) var(--sp-5); border-bottom:1px solid var(--ink-line); }
+.step:last-of-type{ border-bottom:none; }
+.step-head{ display:flex; align-items:center; gap:10px; margin-bottom:var(--sp-4); }
+.step-num{
+  width:26px; height:26px; border-radius:50%; border:1.5px solid var(--gold-500); color:var(--gold-400);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cairo',sans-serif; font-weight:700; font-size:12.5px; flex-shrink:0;
+}
+.step-title{ font-family:'Cairo',sans-serif; font-weight:700; font-size:14px; color:var(--text-on-dark); }
+.step-desc{ font-size:11.5px; color:var(--text-on-dark-muted); margin-inline-start:36px; margin-top:-8px; margin-bottom:var(--sp-4); line-height:1.6; }
+
+.dropzone{
+  border:1.5px dashed var(--ink-700); border-radius:var(--r-md); background:var(--ink-800);
+  padding:var(--sp-5) var(--sp-4); text-align:center; cursor:pointer;
+  transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  position:relative; display:block;
+}
+.dropzone:hover{ border-color:var(--gold-500); background:#26212F; }
+.dropzone.drag-over{ border-color:var(--gold-400); background:#2A2436; transform:scale(1.01); }
+.dropzone.has-file{ border-style:solid; border-color:var(--success); background:#1B2A22; }
+.dropzone input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.dropzone .dz-icon{ font-size:21px; margin-bottom:6px; display:block; }
+.dropzone .dz-text{ font-size:13px; font-weight:700; color:var(--text-on-dark); font-family:'Cairo',sans-serif; }
+.dropzone .dz-sub{ font-size:11px; color:var(--text-on-dark-muted); margin-top:3px; }
+.dropzone .dz-filename{ font-size:11.5px; color:#6FD69A; font-weight:700; margin-top:6px; word-break:break-all; }
+
+.data-summary{
+  margin-top:var(--sp-3); font-size:12px; color:var(--text-on-dark-muted);
+  background:var(--ink-800); border:1px solid var(--ink-line); border-radius:var(--r-sm);
+  padding:8px 12px; display:none;
+}
+.data-summary.show{ display:block; }
+.data-summary b{ color:var(--gold-400); font-weight:700; }
+
+.field-empty{
+  font-size:12px; color:var(--text-on-dark-muted); text-align:center; padding:22px 10px; line-height:1.7;
+  border:1px dashed var(--ink-700); border-radius:var(--r-md);
+}
+.field-card{ border:1px solid var(--ink-line); border-radius:var(--r-md); padding:var(--sp-4); margin-bottom:var(--sp-3); background:var(--ink-800); }
+.field-card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-3); gap:8px; }
+.field-chip{ font-size:12px; font-weight:700; color:var(--ink-950); background:var(--gold-400); border-radius:999px; padding:3px 11px; font-family:'Cairo',sans-serif; }
+.field-card-actions{ display:flex; align-items:center; gap:6px; }
+.icon-btn{
+  border:1px solid var(--ink-line); background:transparent; color:var(--text-on-dark-muted); cursor:pointer;
+  width:26px; height:26px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center;
+  font-size:12px; transition:all .12s ease;
+}
+.icon-btn:hover{ color:var(--text-on-dark); border-color:var(--gold-500); }
+.icon-btn.active{ background:var(--gold-500); color:var(--ink-950); border-color:var(--gold-500); }
+.icon-btn.danger:hover{ color:#fff; background:var(--danger); border-color:var(--danger); }
+
+.field-row{ display:flex; gap:8px; margin-bottom:var(--sp-2); }
+.field-row:last-child{ margin-bottom:0; }
+.mini-control{ flex:1; min-width:0; }
+.mini-control label{ display:block; font-size:10.5px; font-weight:700; color:var(--text-on-dark-muted); margin-bottom:4px; }
+.mini-control input[type=number], .mini-control select{
+  width:100%; font-size:12.5px; padding:7px 8px; border:1px solid var(--ink-line); border-radius:var(--r-sm);
+  background:var(--ink-900); color:var(--text-on-dark);
+}
+.mini-control input[type=color]{ width:100%; height:31px; padding:2px; border:1px solid var(--ink-line); border-radius:var(--r-sm); background:var(--ink-900); cursor:pointer; }
+.mini-control input[type=range]{ width:100%; accent-color:var(--gold-500); }
+
+.sidebar-footer{ margin-top:auto; padding:var(--sp-5) var(--sp-6); border-top:1px solid var(--ink-line); background:var(--ink-950); }
+.btn{
+  width:100%; padding:12px 16px; border-radius:var(--r-md); border:none; font-weight:700; font-size:13.5px; cursor:pointer;
+  transition:transform .1s ease, box-shadow .15s ease, background .15s ease, opacity .15s ease;
+  display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cairo',sans-serif;
+}
+.btn-gold{ background:linear-gradient(180deg, var(--gold-400), var(--gold-500)); color:var(--ink-950); box-shadow:var(--shadow-sm); }
+.btn-gold:hover:not(:disabled){ box-shadow:var(--shadow-md); transform:translateY(-1px); }
+.btn-gold:active:not(:disabled){ transform:translateY(0px); }
+.btn-gold:disabled{ background:var(--ink-700); color:var(--text-on-dark-muted); cursor:not-allowed; box-shadow:none; }
+.btn-outline{ background:transparent; border:1px solid var(--ink-line); color:var(--text-on-dark); font-size:12px; padding:9px 10px; font-family:'Tajawal',sans-serif; font-weight:700; }
+.btn-outline:hover{ border-color:var(--gold-500); color:var(--gold-400); }
+.footer-row{ display:flex; gap:8px; margin-top:10px; }
+.footer-row .btn-outline{ flex:1; }
+.status-line{ font-size:11.5px; color:var(--text-on-dark-muted); text-align:center; margin-top:10px; }
+.status-line.ready{ color:var(--gold-400); font-weight:700; }
+
+/* ================================================================
+   AD SLOTS — GOOGLE ADSENSE
+   ================================================================ */
+.ad-slot{
+  width:100%; max-width:940px; border:1.5px dashed var(--paper-line); border-radius:var(--r-md);
+  background:rgba(38,35,47,0.03); color:var(--text-on-paper-muted); font-size:11.5px; text-align:center;
+  padding:10px; margin-top:var(--sp-5);
+}
+.ad-slot.sidebar-ad{ max-width:none; margin:var(--sp-4) 0 0; }
+
+.legal-links{ display:flex; flex-wrap:wrap; gap:4px 10px; justify-content:center; font-size:11px; color:var(--text-on-dark-muted); margin-top:14px; }
+.legal-links a{ color:var(--text-on-dark-muted); text-decoration:none; }
+.legal-links a:hover{ color:var(--gold-400); }
+
+/* ================================================================
+   WORKSPACE
+   ================================================================ */
+.workspace{
+  flex:1; min-width:0; overflow:auto; display:flex; flex-direction:column; align-items:center;
+  padding:var(--sp-8) var(--sp-6) 60px; background:var(--paper-50);
+  background-image: repeating-radial-gradient(circle at 0% 0%, rgba(201,151,58,0.05) 0 1.5px, transparent 1.5px 11px);
+}
+
+.dock{
+  width:100%; max-width:940px; background:var(--ink-900); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-md); color:var(--text-on-dark); margin-bottom:var(--sp-5); overflow:hidden; display:none;
+}
+.dock.show{ display:block; }
+.dock-section{ padding:var(--sp-4) var(--sp-5); }
+.dock-section + .dock-section{ border-top:1px solid var(--ink-line); }
+.dock-label{ font-size:11px; font-weight:700; color:var(--gold-400); display:flex; align-items:center; gap:6px; margin-bottom:10px; font-family:'Cairo',sans-serif; }
+.palette-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.palette-chip{
+  display:flex; align-items:center; gap:6px; background:var(--ink-800); color:var(--text-on-dark);
+  border:1px solid var(--ink-line); border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:700;
+  cursor:grab; user-select:none; transition:border-color .12s ease, background .12s ease;
+}
+.palette-chip:hover{ border-color:var(--gold-500); background:#2A2436; }
+.palette-chip.dragging{ opacity:0.35; }
+.palette-chip .grip{ font-size:10px; opacity:0.55; }
+.palette-empty{ font-size:12px; color:var(--text-on-dark-muted); }
+
+.dock-toolrow{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.preview-nav{ display:flex; align-items:center; gap:6px; }
+.preview-nav .count{ font-size:12px; color:var(--text-on-dark-muted); min-width:76px; text-align:center; }
+.switch{ display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; color:var(--text-on-dark); user-select:none; }
+.switch input{ display:none; }
+.switch .track{ width:36px; height:20px; border-radius:999px; background:var(--ink-700); position:relative; transition:background .15s ease; flex-shrink:0; }
+.switch .track::after{ content:''; position:absolute; top:2px; inset-inline-end:2px; width:16px; height:16px; border-radius:50%; background:var(--text-on-dark-muted); transition:transform .15s ease, background .15s ease; }
+.switch input:checked + .track{ background:var(--gold-600); }
+.switch input:checked + .track::after{ transform:translateX(-16px); background:var(--gold-300); }
+html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px); }
+
+.canvas-card{ display:flex; flex-direction:column; align-items:center; gap:var(--sp-3); width:100%; max-width:940px; }
+.canvas-hint{ font-size:12px; color:var(--text-on-paper-muted); text-align:center; }
+.canvas-hint b{ color:var(--gold-600); }
+
+#canvas-stage{
+  position:relative; background:#fff; border-radius:var(--r-lg); box-shadow:var(--shadow-lg);
+  overflow:hidden; max-width:100%; line-height:0; outline:3px solid transparent; outline-offset:-3px;
+  transition:outline-color .15s ease;
+}
+#canvas-stage.drop-active{ outline-color:var(--gold-500); }
+
+.empty-canvas{
+  width:860px; max-width:100%; aspect-ratio:1.5/1; display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:12px; color:var(--text-on-paper-muted);
+  background: repeating-radial-gradient(circle at 50% 50%, rgba(201,151,58,0.10) 0 1.5px, transparent 1.5px 12px), var(--paper-100);
+  border:2px dashed var(--paper-line);
+}
+.empty-canvas .seal-mark{ width:44px; height:44px; opacity:0.7; }
+.empty-canvas .big{ font-size:16px; font-weight:700; color:var(--text-on-paper); font-family:'Cairo',sans-serif; }
+.empty-canvas .small{ font-size:12.5px; max-width:340px; text-align:center; line-height:1.7; }
+
+#template-img{ display:block; max-width:860px; width:100%; height:auto; -webkit-user-drag:none; user-select:none; }
+
+.snap-guide{ position:absolute; background:var(--gold-500); pointer-events:none; opacity:0; z-index:15; }
+.snap-guide.v{ top:0; bottom:0; width:1px; left:50%; }
+.snap-guide.h{ left:0; right:0; height:1px; top:50%; }
+.snap-guide.show{ opacity:0.85; }
+
+.text-field{
+  position:absolute; padding:5px 9px; white-space:nowrap; cursor:grab;
+  border:1.5px dashed rgba(201,151,58,0.7); border-radius:6px; background:rgba(201,151,58,0.08);
+  user-select:none; max-width:90%; overflow:visible; touch-action:none;
+}
+.text-field:hover{ background:rgba(201,151,58,0.15); }
+.text-field:hover .field-remove-btn{ display:flex; }
+.text-field.dragging{ cursor:grabbing; border-style:solid; border-color:var(--gold-600); background:rgba(201,151,58,0.16); box-shadow:0 8px 20px rgba(201,151,58,0.3); z-index:10; }
+.text-field.selected{ border-style:solid; border-color:var(--gold-600); box-shadow:0 0 0 3px rgba(201,151,58,0.22); }
+.field-remove-btn{
+  display:none; position:absolute; top:-9px; left:-9px; width:19px; height:19px; border-radius:50%;
+  background:var(--danger); color:#fff; border:2px solid #fff; align-items:center; justify-content:center;
+  font-size:11px; line-height:1; cursor:pointer; z-index:11;
+}
+
+.overlay{ position:fixed; inset:0; background:rgba(14,12,21,0.78); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:200; }
+.overlay.show{ display:flex; }
+.overlay-card{ background:var(--ink-900); color:var(--text-on-dark); border:1px solid var(--ink-line); border-radius:var(--r-lg); padding:36px 44px; display:flex; flex-direction:column; align-items:center; gap:16px; min-width:290px; box-shadow:var(--shadow-lg); }
+.spinner{ width:38px; height:38px; border-radius:50%; border:3.5px solid var(--ink-700); border-top-color:var(--gold-400); animation:spin 0.8s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.overlay-text{ font-size:13.5px; font-weight:700; font-family:'Cairo',sans-serif; }
+.overlay-progress-track{ width:210px; height:6px; border-radius:999px; background:var(--ink-800); overflow:hidden; }
+.overlay-progress-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--gold-500),var(--gold-400)); border-radius:999px; transition:width .15s ease; }
+
+.toast{
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--ink-950); color:var(--text-on-dark); border:1px solid var(--ink-line);
+  padding:12px 20px; border-radius:999px; font-size:12.5px; font-weight:700; box-shadow:var(--shadow-lg);
+  opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:300;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.error{ background:#3B1616; border-color:var(--danger); }
+
+.cookie-banner{
+  position:fixed; bottom:0; inset-inline:0; z-index:400; background:var(--ink-950); color:var(--text-on-dark);
+  border-top:1px solid var(--ink-line); padding:14px 24px; display:none; align-items:center; justify-content:center;
+  gap:18px; flex-wrap:wrap; box-shadow:0 -8px 24px rgba(0,0,0,0.25);
+}
+.cookie-banner.show{ display:flex; }
+.cookie-banner p{ margin:0; font-size:12.5px; max-width:640px; text-align:center; line-height:1.7; color:var(--text-on-dark-muted); }
+.cookie-banner a{ color:var(--gold-400); }
+.cookie-banner .btn-gold{ width:auto; padding:9px 20px; flex-shrink:0; }
+
+@media (max-width: 900px){
+  .app{ flex-direction:column; }
+  .sidebar{ width:100%; height:auto; max-height:46vh; border-inline-end:none; border-bottom:1px solid var(--ink-line); }
+  .workspace{ padding:var(--sp-5) var(--sp-3) 40px; }
+  .topbar .subtitle{ display:none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .spinner{ animation-duration:1.4s; }
+  *{ transition-duration:0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="topbar">
+    <a class="brand" href="index.html">
+      <svg class="seal-mark" viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" stroke="#E4C468" stroke-width="1.4" opacity="0.85"/>
+        <circle cx="22" cy="22" r="15.5" stroke="#E4C468" stroke-width="1" opacity="0.55"/>
+        <circle cx="22" cy="22" r="9" fill="#E4C468" opacity="0.15" stroke="#E4C468" stroke-width="1.2"/>
+        <path d="M22 15 L24.2 20 L29.6 20.4 L25.4 24 L26.8 29.3 L22 26.3 L17.2 29.3 L18.6 24 L14.4 20.4 L19.8 20 Z" fill="#E4C468"/>
+      </svg>
+      <span class="brand-text">bulkgallery.com</span>
+    </a>
+    <span class="subtitle" data-i18n="topbar_subtitle">Template + spreadsheet → hundreds of ready designs, right in your browser</span>
+    <div class="topbar-actions">
+      <button class="icon-btn-top" id="theme-toggle" title="Toggle dark mode" data-i18n-title="toggle_theme">🌙</button>
+      <div class="lang-switch">
+        <button class="lang-btn" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="ar">AR</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+
+    <aside class="sidebar">
+
+      <div class="step">
+        <div class="step-head"><span class="step-num" id="step-num-1">1</span><span class="step-title" data-i18n="step1_title">Template image</span></div>
+        <label class="dropzone" id="dz-image">
+          <input type="file" id="input-image" accept="image/png, image/jpeg" />
+          <span class="dz-icon">🖼️</span>
+          <span class="dz-text" data-i18n="dz_image_text">Click or drop an image here</span>
+          <span class="dz-sub" data-i18n="dz_image_sub">PNG or JPG, any size</span>
+          <span class="dz-filename" id="image-filename"></span>
+        </label>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num" id="step-num-2">2</span><span class="step-title" data-i18n="step2_title">Spreadsheet data</span></div>
+        <label class="dropzone" id="dz-csv">
+          <input type="file" id="input-csv" accept=".csv" />
+          <span class="dz-icon">📄</span>
+          <span class="dz-text" data-i18n="dz_csv_text">Click or drop a CSV file</span>
+          <span class="dz-sub" data-i18n="dz_csv_sub">First row must be column headers</span>
+          <span class="dz-filename" id="csv-filename"></span>
+        </label>
+        <div class="data-summary" id="data-summary"></div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num" id="step-num-3">3</span><span class="step-title" data-i18n="step3_title">Field styling</span></div>
+        <div class="step-desc" data-i18n="step3_desc">Drag a field from the bar above onto the page first, then style it here.</div>
+        <div id="fields-container">
+          <div class="field-empty" id="fields-empty" data-i18n="fields_empty">No fields on the page yet.</div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-gold" id="btn-generate" disabled>
+          <span>⚡</span> <span data-i18n="btn_generate">Generate &amp; download all (ZIP)</span>
+        </button>
+        <div class="status-line" id="status-line" data-i18n="status_start">Upload a template image and a data file to begin</div>
+        <div class="footer-row">
+          <button class="btn-outline" id="btn-export-project" type="button">💾 <span data-i18n="btn_save_project">Save project</span></button>
+          <label class="btn-outline" id="btn-import-project" style="cursor:pointer; position:relative;">
+            📂 <span data-i18n="btn_import_project">Import project</span>
+            <input type="file" id="input-project" accept="application/json" style="position:absolute; inset:0; opacity:0; cursor:pointer;" />
+          </label>
+        </div>
+
+        <!-- ================= GOOGLE ADSENSE AD SLOT (SIDEBAR) =================
+             Replace the line below with your real <ins class="adsbygoogle">...</ins>
+             + <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+             once your AdSense ad unit is created. -->
+        <div class="ad-slot sidebar-ad" data-i18n="ad_space">Ad space</div>
+        <!-- ================= END GOOGLE ADSENSE AD SLOT ================= -->
+
+        <div class="legal-links">
+          <a href="about.html" data-i18n="link_about">About</a>·<a href="terms.html" data-i18n="link_terms">Terms of Use</a>·<a href="privacy-policy.html" data-i18n="link_privacy">Privacy</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+
+      <div class="dock" id="dock">
+        <div class="dock-section">
+          <div class="dock-label" data-i18n="palette_hint">🗂️ Available fields — drag &amp; drop onto the page, or click to add instantly</div>
+          <div class="palette-chips" id="field-palette-chips"></div>
+        </div>
+        <div class="dock-section">
+          <div class="dock-toolrow">
+            <label class="switch">
+              <input type="checkbox" id="preview-toggle" />
+              <span class="track"></span>
+              <span data-i18n="preview_label">Preview with real data</span>
+            </label>
+            <div class="preview-nav" id="preview-nav" style="display:none;">
+              <button class="icon-btn" id="preview-prev" title="Previous row">‹</button>
+              <span class="count" id="preview-count">1 of 1</span>
+              <button class="icon-btn" id="preview-next" title="Next row">›</button>
+              <button class="btn-outline" id="btn-download-single" style="width:auto; padding:8px 12px;">⬇️ <span data-i18n="btn_download_single">Download this design</span></button>
+            </div>
+            <button class="btn-outline" id="btn-clear-fields" style="width:auto; padding:8px 12px;">🧹 <span data-i18n="btn_clear_fields">Clear all fields</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-card">
+        <div class="canvas-hint" id="canvas-hint" data-i18n="canvas_hint">🖱️ Drag a field from the bar above onto the page · <b>Click</b> a field to select it, then use the <b>arrow keys</b> to nudge it precisely</div>
+        <div id="canvas-stage">
+          <div class="empty-canvas" id="empty-canvas">
+            <svg class="seal-mark" viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="20" stroke="#C9973A" stroke-width="1.4" opacity="0.6"/>
+              <circle cx="22" cy="22" r="9" fill="none" stroke="#C9973A" stroke-width="1.2" opacity="0.6"/>
+            </svg>
+            <span class="big" data-i18n="empty_big">Your template will appear here</span>
+            <span class="small" data-i18n="empty_small">Upload an image from the sidebar to start. Once you upload a CSV, its column names will appear as fields in the bar above — drag whichever you need onto the template.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= GOOGLE ADSENSE AD SLOT (BELOW WORKSPACE) =================
+           Replace the line below with your real <ins class="adsbygoogle">...</ins>
+           + <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+           once your AdSense ad unit is created. -->
+      <div class="ad-slot" data-i18n="ad_space">Ad space</div>
+      <!-- ================= END GOOGLE ADSENSE AD SLOT ================= -->
+    </main>
+
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <div class="spinner"></div>
+    <div class="overlay-text" id="overlay-text">Generating design 1 of 1…</div>
+    <div class="overlay-progress-track"><div class="overlay-progress-fill" id="overlay-fill"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="cookie-banner" id="cookie-banner">
+  <p data-i18n="cookie_text">We use cookies to improve your experience, and Google AdSense may use them to show personalized ads. By continuing to use the site, you agree to our <a href="privacy-policy.html" target="_blank">Privacy Policy</a>.</p>
+  <button class="btn btn-gold" id="cookie-accept" data-i18n="cookie_accept">Accept</button>
+</div>
+
+<script>
+/* ================================================================
+   "KHITM" (bulkgallery.com) — bulk certificate & design generator
+   Pure vanilla JS, no build step, no backend. Image generation runs
+   entirely on the native <canvas> API for speed and privacy —
+   nothing is ever uploaded anywhere.
+================================================================ */
+
+const state = {
+  imageDataUrl: null,
+  imageFilename: '',
+  csvHeaders: [],
+  csvRows: [],
+  csvFilename: '',
+  fieldStyles: {},
+  placed: {},
+  selectedHeader: null,
+  previewRowIndex: -1,
+  lang: 'en',
+};
+
+const FONT_OPTIONS = [
+  'Cairo', 'Tajawal', 'Almarai', 'Amiri', 'Reem Kufi',
+  'Arial', 'Tahoma', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS'
+];
+const ARABIC_DIGITS = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+function toArabicDigits(n){ return String(n).replace(/[0-9]/g, d => ARABIC_DIGITS[d]); }
+function digits(n){ return state.lang === 'ar' ? toArabicDigits(n) : String(n); }
+
+// ================================================================
+// TRANSLATIONS
+// ================================================================
+const I18N = {
+  en: {
+    page_title: 'BulkGallery — Generate Certificates & Designs in Bulk',
+    page_description: 'A free tool to generate hundreds of certificates and designs at once from a template and a CSV file — runs entirely in your browser.',
+    toggle_theme: 'Toggle dark mode',
+    topbar_subtitle: 'Template + spreadsheet → hundreds of ready designs, right in your browser',
+    step1_title: 'Template image',
+    step2_title: 'Spreadsheet data',
+    step3_title: 'Field styling',
+    step3_desc: 'Drag a field from the bar above onto the page first, then style it here.',
+    dz_image_text: 'Click or drop an image here',
+    dz_image_sub: 'PNG or JPG, any size',
+    dz_csv_text: 'Click or drop a CSV file',
+    dz_csv_sub: 'First row must be column headers',
+    fields_empty: 'No fields on the page yet.',
+    btn_generate: 'Generate &amp; download all (ZIP)',
+    btn_save_project: 'Save project',
+    btn_import_project: 'Import project',
+    ad_space: 'Ad space',
+    link_about: 'About', link_terms: 'Terms of Use', link_privacy: 'Privacy',
+    palette_hint: '🗂️ Available fields — drag &amp; drop onto the page, or click to add instantly',
+    preview_label: 'Preview with real data',
+    btn_download_single: 'Download this design',
+    btn_clear_fields: 'Clear all fields',
+    canvas_hint: '🖱️ Drag a field from the bar above onto the page · <b>Click</b> a field to select it, then use the <b>arrow keys</b> to nudge it precisely',
+    empty_big: 'Your template will appear here',
+    empty_small: 'Upload an image from the sidebar to start. Once you upload a CSV, its column names will appear as fields in the bar above — drag whichever you need onto the template.',
+    cookie_text: 'We use cookies to improve your experience, and Google AdSense may use them to show personalized ads. By continuing to use the site, you agree to our <a href="privacy-policy.html" target="_blank">Privacy Policy</a>.',
+    cookie_accept: 'Accept',
+    status_start: 'Upload a template image and a data file to begin',
+    status_need_image: 'Now upload the template image',
+    status_need_csv: 'Now upload a CSV data file',
+    status_ready_with_fields: 'Ready — {n} designs will be generated into one ZIP file',
+    status_ready_no_fields: "Ready — you haven't added any fields yet, drag them from the bar above first",
+    data_summary: '{cols} columns · {rows} data rows',
+    palette_empty: 'All fields have been added to the page ✓ — remove one to bring it back here.',
+    field_font_size: 'Font size', field_color: 'Color', field_font_family: 'Font family', field_rotation: 'Rotation ({deg}°)',
+    field_bold_title: 'Bold', field_italic_title: 'Italic', field_remove_title: 'Remove field',
+    field_remove_on_canvas_title: 'Remove this field from the page',
+    preview_count: '{i} of {n}',
+    overlay_generating: 'Generating design {i} of {n}…',
+    overlay_compressing: 'Compressing files into one archive…',
+    overlay_done: 'Done — {n} designs generated and downloaded',
+    toast_bad_image: 'Please upload a PNG or JPG image.',
+    toast_image_read_error: 'Could not read the image file.',
+    toast_bad_csv: 'Please upload a CSV file.',
+    toast_empty_csv: 'This CSV file appears to be empty.',
+    toast_csv_parse_error: 'Could not parse the CSV file. Please check its formatting.',
+    toast_csv_read_error: 'Could not read the CSV file.',
+    toast_need_image_first: 'Upload a template image first.',
+    toast_cleared: 'All fields cleared from the page.',
+    toast_need_csv_first: 'Upload a CSV file first.',
+    toast_single_download_ok: 'This design has been downloaded.',
+    toast_single_download_err: 'Could not download this design.',
+    toast_generation_error: 'An error occurred during generation. Check the console for details.',
+    toast_generation_success: 'Successfully generated {n} designs and downloaded them in one ZIP file.',
+    toast_need_image_before_save: 'Upload a template before saving.',
+    toast_project_saved: 'Project saved.',
+    toast_project_imported: 'Project imported successfully.',
+    toast_project_invalid: 'Invalid project file.',
+    row_word: 'row', design_word: 'design',
+    zip_filename: 'designs.zip', project_filename: 'project.json',
+  },
+  ar: {
+    page_title: 'الخِتم — مولّد التصاميم والشهادات بالجملة',
+    page_description: 'أداة مجانية لإنشاء مئات الشهادات والتصاميم دفعة واحدة من قالب وملف بيانات CSV، تعمل بالكامل داخل متصفحك.',
+    toggle_theme: 'تبديل الوضع الليلي',
+    topbar_subtitle: 'قالب + جدول بيانات ← مئات التصاميم الجاهزة، من متصفحك مباشرة',
+    step1_title: 'صورة القالب',
+    step2_title: 'بيانات الجدول',
+    step3_title: 'تنسيق الحقول',
+    step3_desc: 'اسحب حقلاً من الشريط العلوي فوق الورقة أولاً، ثم نسّقه من هنا.',
+    dz_image_text: 'اضغط أو اسحب صورة هنا',
+    dz_image_sub: 'PNG أو JPG بأي مقاس',
+    dz_csv_text: 'اضغط أو اسحب ملف CSV',
+    dz_csv_sub: 'الصف الأول يجب أن يكون أسماء الأعمدة',
+    fields_empty: 'لا توجد حقول على الورقة بعد.',
+    btn_generate: 'إنشاء وتنزيل الكل (ZIP)',
+    btn_save_project: 'حفظ المشروع',
+    btn_import_project: 'استيراد مشروع',
+    ad_space: 'مساحة إعلانية',
+    link_about: 'من نحن', link_terms: 'شروط الاستخدام', link_privacy: 'الخصوصية',
+    palette_hint: '🗂️ الحقول المتاحة — اسحبها وأفلتها على الورقة، أو اضغط للإضافة السريعة',
+    preview_label: 'معاينة ببيانات حقيقية',
+    btn_download_single: 'تنزيل هذا التصميم',
+    btn_clear_fields: 'مسح كل الحقول',
+    canvas_hint: '🖱️ اسحب حقلاً من الشريط أعلاه إلى الورقة · <b>انقر</b> على حقل لتحديده ثم استخدم <b>الأسهم</b> لتحريكه بدقة',
+    empty_big: 'سيظهر قالبك هنا',
+    empty_small: 'ارفع صورة من القائمة الجانبية للبدء. بعد رفع ملف CSV ستظهر أسماء الأعمدة كحقول في الشريط العلوي — اسحب ما تريده منها إلى مكانه على القالب.',
+    cookie_text: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك، وقد تعرض إعلانات Google AdSense إعلانات مخصّصة بناءً عليها. بمتابعة استخدام الموقع فأنت توافق على <a href="privacy-policy.html" target="_blank">سياسة الخصوصية</a>.',
+    cookie_accept: 'موافق',
+    status_start: 'ارفع صورة القالب وملف البيانات للبدء',
+    status_need_image: 'الآن ارفع صورة القالب',
+    status_need_csv: 'الآن ارفع ملف بيانات CSV',
+    status_ready_with_fields: 'جاهز — سيتم إنشاء {n} تصميم في ملف ZIP واحد',
+    status_ready_no_fields: 'جاهز — لم تُضِف أي حقول بعد، اسحبها من الشريط أعلاه أولاً',
+    data_summary: '{cols} عمود · {rows} صف بيانات',
+    palette_empty: 'تمت إضافة جميع الحقول إلى الورقة ✓ — احذف حقلاً لإعادته هنا.',
+    field_font_size: 'حجم الخط', field_color: 'اللون', field_font_family: 'نوع الخط', field_rotation: 'الدوران ({deg}°)',
+    field_bold_title: 'عريض', field_italic_title: 'مائل', field_remove_title: 'إزالة الحقل',
+    field_remove_on_canvas_title: 'إزالة هذا الحقل من الورقة',
+    preview_count: '{i} من {n}',
+    overlay_generating: 'جاري إنشاء التصميم {i} من {n}…',
+    overlay_compressing: 'جاري ضغط الملفات في أرشيف واحد…',
+    overlay_done: 'تم — تم إنشاء {n} تصميم وتنزيلها',
+    toast_bad_image: 'الرجاء رفع صورة بصيغة PNG أو JPG.',
+    toast_image_read_error: 'تعذّرت قراءة ملف الصورة.',
+    toast_bad_csv: 'الرجاء رفع ملف بصيغة CSV.',
+    toast_empty_csv: 'يبدو أن ملف CSV فارغ.',
+    toast_csv_parse_error: 'تعذّر تحليل ملف CSV. تأكد من تنسيقه.',
+    toast_csv_read_error: 'تعذّرت قراءة ملف CSV.',
+    toast_need_image_first: 'ارفع صورة القالب أولاً.',
+    toast_cleared: 'تم مسح كل الحقول من الورقة.',
+    toast_need_csv_first: 'ارفع ملف CSV أولاً.',
+    toast_single_download_ok: 'تم تنزيل هذا التصميم.',
+    toast_single_download_err: 'تعذّر تنزيل هذا التصميم.',
+    toast_generation_error: 'حدث خطأ أثناء التوليد. راجع وحدة التحكم لمزيد من التفاصيل.',
+    toast_generation_success: 'تم إنشاء {n} تصميم وتنزيلها في ملف ZIP واحد بنجاح.',
+    toast_need_image_before_save: 'ارفع قالباً أولاً قبل الحفظ.',
+    toast_project_saved: 'تم حفظ المشروع.',
+    toast_project_imported: 'تم استيراد المشروع بنجاح.',
+    toast_project_invalid: 'ملف المشروع غير صالح.',
+    row_word: 'صف', design_word: 'تصميم',
+    zip_filename: 'التصاميم.zip', project_filename: 'مشروع-التصميم.json',
+  }
+};
+
+function t(key, vars){
+  let str = (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
+  if(vars){ Object.keys(vars).forEach(k => { str = str.split('{'+k+'}').join(vars[k]); }); }
+  return str;
+}
+
+// ---------- DOM references ----------
+const $ = (id) => document.getElementById(id);
+const inputImage = $('input-image');
+const inputCsv = $('input-csv');
+const inputProject = $('input-project');
+const dzImage = $('dz-image');
+const dzCsv = $('dz-csv');
+const imageFilenameEl = $('image-filename');
+const csvFilenameEl = $('csv-filename');
+const dataSummaryEl = $('data-summary');
+const fieldsContainer = $('fields-container');
+const fieldsEmpty = $('fields-empty');
+const canvasStage = $('canvas-stage');
+const emptyCanvas = $('empty-canvas');
+const btnGenerate = $('btn-generate');
+const btnExportProject = $('btn-export-project');
+const btnClearFields = $('btn-clear-fields');
+const btnDownloadSingle = $('btn-download-single');
+const statusLine = $('status-line');
+const overlay = $('overlay');
+const overlayText = $('overlay-text');
+const overlayFill = $('overlay-fill');
+const toastEl = $('toast');
+const dock = $('dock');
+const fieldPaletteChips = $('field-palette-chips');
+const previewToggle = $('preview-toggle');
+const previewNav = $('preview-nav');
+const previewPrev = $('preview-prev');
+const previewNext = $('preview-next');
+const previewCount = $('preview-count');
+const themeToggle = $('theme-toggle');
+const cookieBanner = $('cookie-banner');
+const cookieAccept = $('cookie-accept');
+
+let templateImgEl = null;
+let snapV, snapH;
+
+// ================================================================
+// TOAST
+// ================================================================
+let toastTimer = null;
+function showToast(message, isError=false){
+  toastEl.textContent = message;
+  toastEl.classList.toggle('error', isError);
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3200);
+}
+
+// ================================================================
+// THEME (light / dark)
+// ================================================================
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  try{ localStorage.setItem('bg_theme', theme); }catch(e){}
+  themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+themeToggle.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+// ================================================================
+// LANGUAGE
+// ================================================================
+function applyLanguage(lang){
+  state.lang = lang;
+  try{ localStorage.setItem('bg_lang', lang); }catch(e){}
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.title = t('page_title');
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if(metaDesc) metaDesc.setAttribute('content', t('page_description'));
+
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+
+  $('step-num-1').textContent = digits(1);
+  $('step-num-2').textContent = digits(2);
+  $('step-num-3').textContent = digits(3);
+
+  renderPalette();
+  renderFieldControls();
+  updatePreviewCount();
+  updateDataSummary();
+  updateGenerateButtonState();
+}
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyLanguage(btn.dataset.lang));
+});
+
+// ================================================================
+// STEP 1 — TEMPLATE IMAGE
+// ================================================================
+function handleImageFile(file){
+  if(!file) return;
+  if(!/^image\/(png|jpeg)$/.test(file.type)){ showToast(t('toast_bad_image'), true); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    state.imageDataUrl = e.target.result;
+    state.imageFilename = file.name;
+    imageFilenameEl.textContent = '✓ ' + file.name;
+    dzImage.classList.add('has-file');
+    renderCanvas();
+    updateGenerateButtonState();
+  };
+  reader.onerror = () => showToast(t('toast_image_read_error'), true);
+  reader.readAsDataURL(file);
+}
+inputImage.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
+setupDragAndDropZone(dzImage, handleImageFile);
+
+// ================================================================
+// STEP 2 — CSV UPLOAD & PARSING
+// ================================================================
+function handleCsvFile(file){
+  if(!file) return;
+  if(!file.name.toLowerCase().endsWith('.csv')){ showToast(t('toast_bad_csv'), true); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const { headers, rows } = parseCsv(e.target.result);
+      if(headers.length === 0){ showToast(t('toast_empty_csv'), true); return; }
+
+      state.csvHeaders = headers;
+      state.csvRows = rows;
+      state.csvFilename = file.name;
+      state.placed = {};
+      state.previewRowIndex = -1;
+      previewToggle.checked = false;
+      previewNav.style.display = 'none';
+
+      const nextStyles = {};
+      headers.forEach(h => {
+        nextStyles[h] = state.fieldStyles[h] || { fontSize:28, color:'#241F2E', fontFamily:'Cairo', bold:false, italic:false, rotation:0 };
+      });
+      state.fieldStyles = nextStyles;
+
+      csvFilenameEl.textContent = '✓ ' + file.name;
+      dzCsv.classList.add('has-file');
+      dataSummaryEl.classList.add('show');
+      updateDataSummary();
+
+      renderPalette();
+      renderFieldControls();
+      renderTextFieldsOnCanvas();
+      updateGenerateButtonState();
+    }catch(err){
+      console.error(err);
+      showToast(t('toast_csv_parse_error'), true);
+    }
+  };
+  reader.onerror = () => showToast(t('toast_csv_read_error'), true);
+  reader.readAsText(file);
+}
+inputCsv.addEventListener('change', (e) => handleCsvFile(e.target.files[0]));
+setupDragAndDropZone(dzCsv, handleCsvFile);
+
+function updateDataSummary(){
+  if(state.csvHeaders.length === 0) return;
+  dataSummaryEl.innerHTML = t('data_summary', { cols: `<b>${digits(state.csvHeaders.length)}</b>`, rows: `<b>${digits(state.csvRows.length)}</b>` });
+}
+
+function parseCsv(text){
+  const rows = [];
+  let field = '', row = [], inQuotes = false;
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  for(let i = 0; i < text.length; i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){ if(text[i+1] === '"'){ field += '"'; i++; } else{ inQuotes = false; } }
+      else { field += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\n'){ row.push(field); rows.push(row); field=''; row=[]; }
+      else { field += c; }
+    }
+  }
+  if(field.length > 0 || row.length > 0){ row.push(field); rows.push(row); }
+  while(rows.length && rows[rows.length-1].every(v => v.trim() === '')) rows.pop();
+  if(rows.length === 0) return { headers: [], rows: [] };
+
+  const headers = rows[0].map(h => h.trim()).filter(h => h.length > 0);
+  const dataRows = rows.slice(1)
+    .filter(r => r.some(v => v.trim() !== ''))
+    .map(r => {
+      const obj = {};
+      headers.forEach((h, idx) => { obj[h] = (r[idx] !== undefined ? r[idx].trim() : ''); });
+      return obj;
+    });
+  return { headers, rows: dataRows };
+}
+
+// ================================================================
+// FILE DRAG & DROP ZONES
+// ================================================================
+function setupDragAndDropZone(zone, onFile){
+  ['dragenter','dragover'].forEach(evt => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add('drag-over'); }));
+  ['dragleave','drop'].forEach(evt => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove('drag-over'); }));
+  zone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) onFile(file);
+  });
+}
+
+// ================================================================
+// CANVAS RENDERING (editor)
+// ================================================================
+function renderCanvas(){
+  if(!state.imageDataUrl) return;
+  canvasStage.innerHTML = '';
+
+  templateImgEl = document.createElement('img');
+  templateImgEl.id = 'template-img';
+  templateImgEl.src = state.imageDataUrl;
+  templateImgEl.draggable = false;
+  canvasStage.appendChild(templateImgEl);
+
+  snapV = document.createElement('div'); snapV.className = 'snap-guide v';
+  snapH = document.createElement('div'); snapH.className = 'snap-guide h';
+  canvasStage.appendChild(snapV);
+  canvasStage.appendChild(snapH);
+
+  templateImgEl.addEventListener('load', renderTextFieldsOnCanvas);
+  setupCanvasDropTarget();
+  canvasStage.addEventListener('mousedown', (e) => {
+    if(e.target === canvasStage || e.target === templateImgEl) deselectField();
+  });
+}
+
+// ================================================================
+// FLOATING FIELD PALETTE
+// ================================================================
+function renderPalette(){
+  const availableHeaders = state.csvHeaders.filter(h => !(h in state.placed));
+  if(state.csvHeaders.length === 0){ dock.classList.remove('show'); return; }
+  dock.classList.add('show');
+  fieldPaletteChips.innerHTML = '';
+
+  if(availableHeaders.length === 0){
+    fieldPaletteChips.innerHTML = `<span class="palette-empty">${t('palette_empty')}</span>`;
+    return;
+  }
+  availableHeaders.forEach(header => {
+    const chip = document.createElement('div');
+    chip.className = 'palette-chip';
+    chip.draggable = true;
+    chip.dataset.header = header;
+    chip.innerHTML = `<span class="grip">⠿</span><span>${escapeHtml(header)}</span>`;
+    chip.addEventListener('dragstart', (e) => {
+      chip.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', header);
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+    chip.addEventListener('click', () => {
+      if(!state.imageDataUrl){ showToast(t('toast_need_image_first'), true); return; }
+      const placedCount = Object.keys(state.placed).length;
+      placeField(header, 20 + (placedCount % 4) * 18, 20 + Math.floor(placedCount / 4) * 16);
+    });
+    fieldPaletteChips.appendChild(chip);
+  });
+}
+
+function setupCanvasDropTarget(){
+  canvasStage.addEventListener('dragover', (e) => {
+    if(!state.imageDataUrl) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+    canvasStage.classList.add('drop-active');
+  });
+  canvasStage.addEventListener('dragleave', () => canvasStage.classList.remove('drop-active'));
+  canvasStage.addEventListener('drop', (e) => {
+    e.preventDefault();
+    canvasStage.classList.remove('drop-active');
+    const header = e.dataTransfer.getData('text/plain');
+    if(!header || !state.csvHeaders.includes(header)) return;
+    const stageRect = canvasStage.getBoundingClientRect();
+    const xPct = Math.min(100, Math.max(0, ((e.clientX - stageRect.left) / stageRect.width) * 100));
+    const yPct = Math.min(100, Math.max(0, ((e.clientY - stageRect.top) / stageRect.height) * 100));
+    placeField(header, xPct, yPct);
+  });
+}
+
+function placeField(header, xPct, yPct){
+  state.placed[header] = { xPct, yPct };
+  if(!state.fieldStyles[header]){
+    state.fieldStyles[header] = { fontSize:28, color:'#241F2E', fontFamily:'Cairo', bold:false, italic:false, rotation:0 };
+  }
+  renderPalette();
+  renderTextFieldsOnCanvas();
+  renderFieldControls();
+  updateGenerateButtonState();
+}
+
+function removeField(header){
+  delete state.placed[header];
+  if(state.selectedHeader === header) state.selectedHeader = null;
+  renderPalette();
+  renderTextFieldsOnCanvas();
+  renderFieldControls();
+  updateGenerateButtonState();
+}
+
+function clearAllFields(){
+  if(Object.keys(state.placed).length === 0) return;
+  state.placed = {};
+  state.selectedHeader = null;
+  renderPalette();
+  renderTextFieldsOnCanvas();
+  renderFieldControls();
+  updateGenerateButtonState();
+  showToast(t('toast_cleared'));
+}
+btnClearFields.addEventListener('click', clearAllFields);
+
+function renderTextFieldsOnCanvas(){
+  if(!templateImgEl) return;
+  canvasStage.querySelectorAll('.text-field').forEach(n => n.remove());
+
+  Object.keys(state.placed).forEach(header => {
+    const pos = state.placed[header];
+    const style = state.fieldStyles[header];
+    const el = document.createElement('div');
+    el.className = 'text-field';
+    if(header === state.selectedHeader) el.classList.add('selected');
+    el.dataset.header = header;
+    applyPositionStyle(el, pos);
+    applyTypographyStyle(el, style);
+
+    const textNode = document.createTextNode(currentTextFor(header));
+    el.appendChild(textNode);
+
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'field-remove-btn';
+    removeBtn.textContent = '×';
+    removeBtn.title = t('field_remove_on_canvas_title');
+    removeBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    removeBtn.addEventListener('click', (e) => { e.stopPropagation(); removeField(header); });
+    el.appendChild(removeBtn);
+
+    canvasStage.appendChild(el);
+    makeDraggable(el);
+  });
+}
+
+function applyPositionStyle(el, pos){ el.style.left = pos.xPct + '%'; el.style.top = pos.yPct + '%'; }
+function applyTypographyStyle(el, style){
+  el.style.fontSize = style.fontSize + 'px';
+  el.style.color = style.color;
+  el.style.fontFamily = style.fontFamily;
+  el.style.fontWeight = style.bold ? '700' : '500';
+  el.style.fontStyle = style.italic ? 'italic' : 'normal';
+  el.style.transform = `translate(-50%,-50%) rotate(${style.rotation || 0}deg)`;
+}
+function currentTextFor(header){
+  if(state.previewRowIndex >= 0 && state.csvRows[state.previewRowIndex]){
+    const v = state.csvRows[state.previewRowIndex][header];
+    return (v !== undefined && v !== '') ? v : `[${header}]`;
+  }
+  return `[${header}]`;
+}
+function updateFieldTexts(){
+  canvasStage.querySelectorAll('.text-field').forEach(el => {
+    const header = el.dataset.header;
+    el.childNodes.forEach(n => { if(n.nodeType === Node.TEXT_NODE) n.remove(); });
+    el.insertBefore(document.createTextNode(currentTextFor(header)), el.firstChild);
+  });
+}
+
+// ================================================================
+// DRAGGING ON THE CANVAS + AUTO SNAP GUIDES
+// ================================================================
+function makeDraggable(el){
+  let dragging = false;
+  let startX, startY, originLeftPct, originTopPct;
+
+  const onPointerDown = (e) => {
+    if(e.target.classList.contains('field-remove-btn')) return;
+    selectField(el.dataset.header);
+    dragging = true;
+    el.classList.add('dragging');
+    const point = e.touches ? e.touches[0] : e;
+    startX = point.clientX; startY = point.clientY;
+    originLeftPct = parseFloat(el.style.left);
+    originTopPct = parseFloat(el.style.top);
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const onPointerMove = (e) => {
+    if(!dragging) return;
+    const point = e.touches ? e.touches[0] : e;
+    const stageRect = canvasStage.getBoundingClientRect();
+    const dxPct = ((point.clientX - startX) / stageRect.width) * 100;
+    const dyPct = ((point.clientY - startY) / stageRect.height) * 100;
+    let newLeft = originLeftPct + dxPct;
+    let newTop = originTopPct + dyPct;
+    newLeft = Math.min(100, Math.max(0, newLeft));
+    newTop = Math.min(100, Math.max(0, newTop));
+
+    const SNAP = 1.4;
+    let snappedV = false, snappedH = false;
+    if(Math.abs(newLeft - 50) < SNAP){ newLeft = 50; snappedV = true; }
+    if(Math.abs(newTop - 50) < SNAP){ newTop = 50; snappedH = true; }
+    snapV.classList.toggle('show', snappedV);
+    snapH.classList.toggle('show', snappedH);
+
+    el.style.left = newLeft + '%';
+    el.style.top = newTop + '%';
+    state.placed[el.dataset.header].xPct = newLeft;
+    state.placed[el.dataset.header].yPct = newTop;
+  };
+
+  const onPointerUp = () => {
+    if(!dragging) return;
+    dragging = false;
+    el.classList.remove('dragging');
+    snapV.classList.remove('show');
+    snapH.classList.remove('show');
+  };
+
+  el.addEventListener('mousedown', onPointerDown);
+  el.addEventListener('touchstart', onPointerDown, { passive:false });
+  window.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('touchmove', onPointerMove, { passive:false });
+  window.addEventListener('mouseup', onPointerUp);
+  window.addEventListener('touchend', onPointerUp);
+}
+
+function selectField(header){
+  state.selectedHeader = header;
+  canvasStage.querySelectorAll('.text-field').forEach(el => { el.classList.toggle('selected', el.dataset.header === header); });
+}
+function deselectField(){
+  state.selectedHeader = null;
+  canvasStage.querySelectorAll('.text-field').forEach(el => el.classList.remove('selected'));
+}
+
+window.addEventListener('keydown', (e) => {
+  const tag = document.activeElement ? document.activeElement.tagName : '';
+  if(['INPUT','SELECT','TEXTAREA'].includes(tag)) return;
+  if(!state.selectedHeader || !state.placed[state.selectedHeader]) return;
+
+  const step = e.shiftKey ? 2 : 0.3;
+  const pos = state.placed[state.selectedHeader];
+  let isArrow = true;
+  if(e.key === 'ArrowLeft') pos.xPct = Math.max(0, pos.xPct - step);
+  else if(e.key === 'ArrowRight') pos.xPct = Math.min(100, pos.xPct + step);
+  else if(e.key === 'ArrowUp') pos.yPct = Math.max(0, pos.yPct - step);
+  else if(e.key === 'ArrowDown') pos.yPct = Math.min(100, pos.yPct + step);
+  else if(e.key === 'Delete' || e.key === 'Backspace'){ removeField(state.selectedHeader); isArrow = false; }
+  else if(e.key === 'Escape'){ deselectField(); isArrow = false; }
+  else isArrow = false;
+
+  if(isArrow){
+    e.preventDefault();
+    const el = canvasStage.querySelector(`.text-field[data-header="${cssEscape(state.selectedHeader)}"]`);
+    if(el) applyPositionStyle(el, pos);
+  }
+});
+
+// ================================================================
+// STEP 3 — STYLE CARDS
+// ================================================================
+function renderFieldControls(){
+  fieldsContainer.innerHTML = '';
+  const placedHeaders = Object.keys(state.placed);
+  if(placedHeaders.length === 0){ fieldsContainer.appendChild(fieldsEmpty); return; }
+
+  placedHeaders.forEach(header => {
+    const f = state.fieldStyles[header];
+    const card = document.createElement('div');
+    card.className = 'field-card';
+    card.innerHTML = `
+      <div class="field-card-head">
+        <span class="field-chip">${escapeHtml(header)}</span>
+        <div class="field-card-actions">
+          <button type="button" class="icon-btn ${f.bold?'active':''}" data-role="bold" title="${t('field_bold_title')}"><b>B</b></button>
+          <button type="button" class="icon-btn ${f.italic?'active':''}" data-role="italic" title="${t('field_italic_title')}"><i>I</i></button>
+          <button type="button" class="icon-btn danger" data-role="delete" title="${t('field_remove_title')}">✕</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="mini-control">
+          <label>${t('field_font_size')}</label>
+          <input type="number" min="8" max="200" value="${f.fontSize}" data-role="size" />
+        </div>
+        <div class="mini-control">
+          <label>${t('field_color')}</label>
+          <input type="color" value="${f.color}" data-role="color" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="mini-control" style="flex:1 0 100%;">
+          <label>${t('field_font_family')}</label>
+          <select data-role="family">
+            ${FONT_OPTIONS.map(fam => `<option value="${fam}" ${fam===f.fontFamily?'selected':''}>${fam}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="mini-control" style="flex:1 0 100%;">
+          <label class="rotation-label">${t('field_rotation', { deg: f.rotation||0 })}</label>
+          <input type="range" min="-180" max="180" value="${f.rotation||0}" data-role="rotation" />
+        </div>
+      </div>
+    `;
+    fieldsContainer.appendChild(card);
+
+    const sizeInput = card.querySelector('[data-role="size"]');
+    const colorInput = card.querySelector('[data-role="color"]');
+    const familySelect = card.querySelector('[data-role="family"]');
+    const rotationInput = card.querySelector('[data-role="rotation"]');
+    const rotationLabel = card.querySelector('.rotation-label');
+    const boldBtn = card.querySelector('[data-role="bold"]');
+    const italicBtn = card.querySelector('[data-role="italic"]');
+    const deleteBtn = card.querySelector('[data-role="delete"]');
+
+    sizeInput.addEventListener('input', () => { f.fontSize = Math.max(8, Math.min(200, parseInt(sizeInput.value, 10) || 8)); applyFieldStyle(header); });
+    colorInput.addEventListener('input', () => { f.color = colorInput.value; applyFieldStyle(header); });
+    familySelect.addEventListener('change', () => { f.fontFamily = familySelect.value; applyFieldStyle(header); });
+    rotationInput.addEventListener('input', () => {
+      f.rotation = parseInt(rotationInput.value, 10);
+      rotationLabel.textContent = t('field_rotation', { deg: f.rotation });
+      applyFieldStyle(header);
+    });
+    boldBtn.addEventListener('click', () => { f.bold = !f.bold; boldBtn.classList.toggle('active', f.bold); applyFieldStyle(header); });
+    italicBtn.addEventListener('click', () => { f.italic = !f.italic; italicBtn.classList.toggle('active', f.italic); applyFieldStyle(header); });
+    deleteBtn.addEventListener('click', () => removeField(header));
+  });
+}
+
+function applyFieldStyle(header){
+  const el = canvasStage.querySelector(`.text-field[data-header="${cssEscape(header)}"]`);
+  if(!el) return;
+  applyTypographyStyle(el, state.fieldStyles[header]);
+}
+
+function cssEscape(str){ return String(str).replace(/["\\]/g, '\\$&'); }
+function escapeHtml(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+// ================================================================
+// LIVE PREVIEW WITH REAL DATA
+// ================================================================
+previewToggle.addEventListener('change', () => {
+  if(previewToggle.checked){
+    if(state.csvRows.length === 0){ previewToggle.checked = false; showToast(t('toast_need_csv_first'), true); return; }
+    state.previewRowIndex = 0;
+    previewNav.style.display = 'flex';
+  } else {
+    state.previewRowIndex = -1;
+    previewNav.style.display = 'none';
+  }
+  updateFieldTexts();
+  updatePreviewCount();
+});
+previewPrev.addEventListener('click', () => { if(state.previewRowIndex <= 0) return; state.previewRowIndex--; updateFieldTexts(); updatePreviewCount(); });
+previewNext.addEventListener('click', () => { if(state.previewRowIndex >= state.csvRows.length - 1) return; state.previewRowIndex++; updateFieldTexts(); updatePreviewCount(); });
+function updatePreviewCount(){
+  if(state.previewRowIndex < 0) return;
+  previewCount.textContent = t('preview_count', { i: digits(state.previewRowIndex+1), n: digits(state.csvRows.length) });
+}
+btnDownloadSingle.addEventListener('click', downloadCurrentPreview);
+
+// ================================================================
+// GENERATE BUTTON STATE
+// ================================================================
+function updateGenerateButtonState(){
+  const ready = !!state.imageDataUrl && state.csvRows.length > 0;
+  btnGenerate.disabled = !ready;
+  if(ready){
+    const placedCount = Object.keys(state.placed).length;
+    statusLine.textContent = placedCount > 0
+      ? t('status_ready_with_fields', { n: digits(state.csvRows.length) })
+      : t('status_ready_no_fields');
+    statusLine.classList.toggle('ready', placedCount > 0);
+  } else {
+    statusLine.textContent = !state.imageDataUrl && state.csvRows.length === 0
+      ? t('status_start')
+      : (!state.imageDataUrl ? t('status_need_image') : t('status_need_csv'));
+    statusLine.classList.remove('ready');
+  }
+}
+
+// ================================================================
+// FAST NATIVE-CANVAS IMAGE GENERATION
+// (No screenshot library involved — draws the template + text directly
+//  with the browser's Canvas 2D API, which is dramatically faster than
+//  capturing the live DOM and keeps everything running on-device.)
+// ================================================================
+let fontsReadyPromise = null;
+function ensureFontsReady(){
+  if(!fontsReadyPromise){
+    fontsReadyPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  }
+  return fontsReadyPromise;
+}
+
+function renderRowToCanvas(row){
+  const scale = 2;
+  const iw = templateImgEl.naturalWidth || templateImgEl.width;
+  const ih = templateImgEl.naturalHeight || templateImgEl.height;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(iw * scale));
+  canvas.height = Math.max(1, Math.round(ih * scale));
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(templateImgEl, 0, 0, canvas.width, canvas.height);
+
+  Object.keys(state.placed).forEach(header => {
+    const pos = state.placed[header];
+    const style = state.fieldStyles[header];
+    const raw = row ? row[header] : undefined;
+    const text = (raw !== undefined && raw !== '') ? raw : `[${header}]`;
+    const x = (pos.xPct / 100) * canvas.width;
+    const y = (pos.yPct / 100) * canvas.height;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(((style.rotation || 0) * Math.PI) / 180);
+    const weight = style.bold ? '700' : '500';
+    const italic = style.italic ? 'italic' : 'normal';
+    ctx.font = `${italic} ${weight} ${Math.round(style.fontSize * scale)}px "${style.fontFamily}"`;
+    ctx.fillStyle = style.color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+  });
+
+  return canvas;
+}
+function canvasToBlob(canvas){ return new Promise(resolve => canvas.toBlob(resolve, 'image/png')); }
+function yieldToUI(){ return new Promise(r => requestAnimationFrame(r)); }
+
+async function downloadCurrentPreview(){
+  if(state.previewRowIndex < 0 || !templateImgEl) return;
+  try{
+    await ensureFontsReady();
+    const row = state.csvRows[state.previewRowIndex];
+    const canvas = renderRowToCanvas(row);
+    const blob = await canvasToBlob(canvas);
+    const nameKey = state.csvHeaders[0];
+    const filename = `${sanitizeFilename(row[nameKey] || t('design_word'))}_${digits(state.previewRowIndex+1)}.png`;
+    downloadBlob(blob, filename);
+    showToast(t('toast_single_download_ok'));
+  }catch(err){
+    console.error(err);
+    showToast(t('toast_single_download_err'), true);
+  }
+}
+
+btnGenerate.addEventListener('click', runBulkGeneration);
+
+function sanitizeFilename(str){
+  return String(str).trim().replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60) || t('row_word');
+}
+
+async function runBulkGeneration(){
+  if(!state.imageDataUrl || state.csvRows.length === 0 || !templateImgEl) return;
+  btnGenerate.disabled = true;
+  overlay.classList.add('show');
+
+  const total = state.csvRows.length;
+  const nameKey = state.csvHeaders[0];
+  const zip = new JSZip();
+
+  try{
+    await ensureFontsReady();
+    for(let i = 0; i < total; i++){
+      const row = state.csvRows[i];
+      overlayText.textContent = t('overlay_generating', { i: digits(i+1), n: digits(total) });
+      overlayFill.style.width = `${Math.round((i / total) * 92)}%`;
+
+      const canvas = renderRowToCanvas(row);
+      const blob = await canvasToBlob(canvas);
+      const filenameBase = sanitizeFilename(row[nameKey] || `${t('row_word')}_${i+1}`);
+      zip.file(`${filenameBase}_${i+1}.png`, blob);
+
+      if(i % 5 === 0) await yieldToUI(); // keep the progress UI responsive without slowing things down
+    }
+
+    overlayText.textContent = t('overlay_compressing');
+    overlayFill.style.width = '96%';
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    downloadBlob(zipBlob, t('zip_filename'));
+
+    overlayFill.style.width = '100%';
+    overlayText.textContent = t('overlay_done', { n: digits(total) });
+    await wait(500);
+    showToast(t('toast_generation_success', { n: digits(total) }));
+  } catch(err){
+    console.error(err);
+    showToast(t('toast_generation_error'), true);
+  } finally {
+    overlay.classList.remove('show');
+    overlayFill.style.width = '0%';
+    btnGenerate.disabled = false;
+  }
+}
+
+function wait(ms){ return new Promise(res => setTimeout(res, ms)); }
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 200);
+}
+
+// ================================================================
+// PROJECT SAVE / IMPORT
+// ================================================================
+btnExportProject.addEventListener('click', () => {
+  if(!state.imageDataUrl){ showToast(t('toast_need_image_before_save'), true); return; }
+  const project = { version: 1, imageDataUrl: state.imageDataUrl, fieldStyles: state.fieldStyles, placed: state.placed };
+  const blob = new Blob([JSON.stringify(project)], { type: 'application/json' });
+  downloadBlob(blob, t('project_filename'));
+  showToast(t('toast_project_saved'));
+});
+
+inputProject.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(data.imageDataUrl){ state.imageDataUrl = data.imageDataUrl; dzImage.classList.add('has-file'); renderCanvas(); }
+      if(data.fieldStyles) state.fieldStyles = { ...state.fieldStyles, ...data.fieldStyles };
+      if(data.placed) state.placed = { ...state.placed, ...data.placed };
+      renderPalette();
+      renderTextFieldsOnCanvas();
+      renderFieldControls();
+      updateGenerateButtonState();
+      showToast(t('toast_project_imported'));
+    }catch(err){
+      console.error(err);
+      showToast(t('toast_project_invalid'), true);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ================================================================
+// COOKIE CONSENT BANNER
+// ================================================================
+(function initCookieConsent(){
+  const KEY = 'bg_cookie_consent';
+  try{ if(!localStorage.getItem(KEY)) cookieBanner.classList.add('show'); }catch(e){}
+  cookieAccept.addEventListener('click', () => {
+    try{ localStorage.setItem(KEY, 'accepted'); }catch(e){}
+    cookieBanner.classList.remove('show');
+  });
+})();
+
+// ================================================================
+// INITIAL STATE
+// ================================================================
+(function init(){
+  let savedTheme = 'light', savedLang = 'en';
+  try{ savedTheme = localStorage.getItem('bg_theme') || 'light'; }catch(e){}
+  try{ savedLang = localStorage.getItem('bg_lang') || 'en'; }catch(e){}
+  applyTheme(savedTheme);
+  applyLanguage(savedLang);
+})();
+</script>
+</body>
+</html>
