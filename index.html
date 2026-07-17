@@ -12,7 +12,8 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Tajawal:wght@400;500;700&family=Amiri&family=Almarai:wght@400;700&family=Reem+Kufi&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <style>
 /* ================================================================
    DESIGN SYSTEM — "Khitm" (the seal)
@@ -166,6 +167,12 @@ svg{ display:block; }
 .data-summary.show{ display:block; }
 .data-summary b{ color:var(--gold-400); font-weight:700; }
 
+.csv-guide-link{
+  display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer;
+  color:var(--gold-400); font-size:11.5px; font-weight:700; padding:8px 2px 0; font-family:'Tajawal',sans-serif;
+}
+.csv-guide-link:hover{ color:var(--gold-300); text-decoration:underline; }
+
 .field-empty{
   font-size:12px; color:var(--text-on-dark-muted); text-align:center; padding:22px 10px; line-height:1.7;
   border:1px dashed var(--ink-700); border-radius:var(--r-md);
@@ -210,6 +217,15 @@ svg{ display:block; }
 .footer-row .btn-outline{ flex:1; }
 .status-line{ font-size:11.5px; color:var(--text-on-dark-muted); text-align:center; margin-top:10px; }
 .status-line.ready{ color:var(--gold-400); font-weight:700; }
+
+.format-switch{ display:flex; gap:6px; margin-bottom:10px; background:var(--ink-800); border:1px solid var(--ink-line); border-radius:var(--r-md); padding:4px; }
+.format-btn{
+  flex:1; background:transparent; border:none; color:var(--text-on-dark-muted); font-size:12px; font-weight:700;
+  padding:8px 6px; border-radius:var(--r-sm); cursor:pointer; font-family:'Cairo',sans-serif;
+  display:flex; align-items:center; justify-content:center; gap:5px; transition:all .12s ease;
+}
+.format-btn.active{ background:var(--gold-500); color:var(--ink-950); }
+.format-btn:not(.active):hover{ color:var(--text-on-dark); }
 
 /* ================================================================
    AD SLOTS — GOOGLE ADSENSE
@@ -335,6 +351,45 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
 .cookie-banner a{ color:var(--gold-400); }
 .cookie-banner .btn-gold{ width:auto; padding:9px 20px; flex-shrink:0; }
 
+/* ================================================================
+   CSV GUIDE MODAL
+   ================================================================ */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(14,12,21,0.6); backdrop-filter:blur(2px);
+  display:none; align-items:center; justify-content:center; z-index:250; padding:24px;
+}
+.modal-overlay.show{ display:flex; }
+.modal-card{
+  background:var(--paper-50); color:var(--text-on-paper); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-lg); max-width:640px; width:100%; max-height:86vh; overflow-y:auto;
+  padding:32px 36px 28px; position:relative;
+}
+.modal-close{
+  position:absolute; top:18px; inset-inline-end:18px; width:30px; height:30px; border-radius:50%;
+  border:1px solid var(--paper-line); background:transparent; color:var(--text-on-paper-muted);
+  cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center;
+}
+.modal-close:hover{ border-color:var(--gold-500); color:var(--gold-600); }
+.modal-card h2{ font-family:'Cairo',sans-serif; font-size:20px; margin:0 0 20px; padding-inline-end:30px; }
+.guide-step{ display:flex; gap:12px; margin-bottom:16px; }
+.guide-step .num{
+  width:24px; height:24px; border-radius:50%; background:var(--gold-500); color:var(--ink-950);
+  font-family:'Cairo',sans-serif; font-weight:800; font-size:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; margin-top:2px;
+}
+.guide-step-title{ font-family:'Cairo',sans-serif; font-weight:700; font-size:13.5px; margin-bottom:3px; }
+.guide-step-body{ font-size:13px; color:var(--text-on-paper-muted); line-height:1.7; }
+.guide-example-title, .guide-tips-title{ font-family:'Cairo',sans-serif; font-weight:700; font-size:13.5px; margin:26px 0 10px; }
+.guide-table{ width:100%; border-collapse:collapse; font-size:12.5px; border:1px solid var(--paper-line); border-radius:var(--r-sm); overflow:hidden; }
+.guide-table th{ background:var(--paper-100); color:var(--text-on-paper); font-family:'Cairo',sans-serif; font-weight:700; text-align:start; padding:8px 10px; border-bottom:1px solid var(--paper-line); }
+.guide-table td{ padding:8px 10px; border-bottom:1px solid var(--paper-line); color:var(--text-on-paper-muted); }
+.guide-table tr:last-child td{ border-bottom:none; }
+.guide-tips{ margin:0; padding-inline-start:20px; font-size:12.5px; color:var(--text-on-paper-muted); line-height:1.8; }
+.guide-tips li{ margin-bottom:4px; }
+.guide-actions{ margin-top:26px; display:flex; gap:10px; flex-wrap:wrap; }
+.guide-actions .btn{ width:auto; padding:11px 18px; }
+.guide-actions .btn-outline{ padding:11px 18px; }
+
 @media (max-width: 900px){
   .app{ flex-direction:column; }
   .sidebar{ width:100%; height:auto; max-height:46vh; border-inline-end:none; border-bottom:1px solid var(--ink-line); }
@@ -396,6 +451,7 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
           <span class="dz-filename" id="csv-filename"></span>
         </label>
         <div class="data-summary" id="data-summary"></div>
+        <button type="button" class="csv-guide-link" id="btn-csv-guide">📚 <span data-i18n="btn_csv_guide">How do I format my CSV?</span></button>
       </div>
 
       <div class="step">
@@ -407,8 +463,12 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
       </div>
 
       <div class="sidebar-footer">
+        <div class="format-switch" id="format-switch">
+          <button class="format-btn active" data-format="zip">📦 <span data-i18n="format_zip">ZIP (images)</span></button>
+          <button class="format-btn" data-format="pdf">📄 <span data-i18n="format_pdf">PDF (one file)</span></button>
+        </div>
         <button class="btn btn-gold" id="btn-generate" disabled>
-          <span>⚡</span> <span data-i18n="btn_generate">Generate &amp; download all (ZIP)</span>
+          <span>⚡</span> <span id="btn-generate-label">Generate &amp; download all (ZIP)</span>
         </button>
         <div class="status-line" id="status-line" data-i18n="status_start">Upload a template image and a data file to begin</div>
         <div class="footer-row">
@@ -497,6 +557,57 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
   <button class="btn btn-gold" id="cookie-accept" data-i18n="cookie_accept">Accept</button>
 </div>
 
+<div class="modal-overlay" id="csv-guide-modal">
+  <div class="modal-card">
+    <button class="modal-close" id="csv-guide-close" aria-label="Close">✕</button>
+    <h2 data-i18n="guide_title">How to prepare your CSV file</h2>
+
+    <div class="guide-step">
+      <span class="num">1</span>
+      <div><div class="guide-step-title" data-i18n="guide_step1_title">1. Open a spreadsheet</div>
+      <div class="guide-step-body" data-i18n="guide_step1_body">Open Excel, Google Sheets, or Numbers and create a new sheet.</div></div>
+    </div>
+    <div class="guide-step">
+      <span class="num">2</span>
+      <div><div class="guide-step-title" data-i18n="guide_step2_title">2. First row = column names</div>
+      <div class="guide-step-body" data-i18n="guide_step2_body">The very first row must contain your field names.</div></div>
+    </div>
+    <div class="guide-step">
+      <span class="num">3</span>
+      <div><div class="guide-step-title" data-i18n="guide_step3_title">3. One row per design</div>
+      <div class="guide-step-body" data-i18n="guide_step3_body">Every row after the header becomes one generated design.</div></div>
+    </div>
+    <div class="guide-step">
+      <span class="num">4</span>
+      <div><div class="guide-step-title" data-i18n="guide_step4_title">4. Export as CSV</div>
+      <div class="guide-step-body" data-i18n="guide_step4_body">Use File → Download → CSV.</div></div>
+    </div>
+
+    <div class="guide-example-title" data-i18n="guide_example_title">Example table</div>
+    <table class="guide-table">
+      <thead><tr><th>Name</th><th>Date</th><th>Score</th></tr></thead>
+      <tbody>
+        <tr><td>Sara Ahmed</td><td>2026-06-01</td><td>95</td></tr>
+        <tr><td>Omar Khalid</td><td>2026-06-01</td><td>88</td></tr>
+        <tr><td>Lina Youssef</td><td>2026-06-01</td><td>91</td></tr>
+      </tbody>
+    </table>
+
+    <div class="guide-tips-title" data-i18n="guide_tips_title">A few tips</div>
+    <ul class="guide-tips">
+      <li data-i18n="guide_tip1">If a value contains a comma, wrap it in double quotes.</li>
+      <li data-i18n="guide_tip2">Keep column names short and clear.</li>
+      <li data-i18n="guide_tip3">Save with UTF-8 encoding if your data includes Arabic text.</li>
+      <li data-i18n="guide_tip4">Empty rows are ignored automatically.</li>
+    </ul>
+
+    <div class="guide-actions">
+      <button class="btn btn-gold" id="btn-download-sample-csv">⬇️ <span data-i18n="guide_download_sample">Download a sample CSV file</span></button>
+      <button class="btn-outline" id="btn-guide-close-2" data-i18n="guide_close">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ================================================================
    "KHITM" (bulkgallery.com) — bulk certificate & design generator
@@ -516,6 +627,7 @@ const state = {
   selectedHeader: null,
   previewRowIndex: -1,
   lang: 'en',
+  exportFormat: 'zip',
 };
 
 const FONT_OPTIONS = [
@@ -545,6 +657,30 @@ const I18N = {
     dz_csv_sub: 'First row must be column headers',
     fields_empty: 'No fields on the page yet.',
     btn_generate: 'Generate &amp; download all (ZIP)',
+    btn_generate_zip: 'Generate &amp; download all (ZIP)',
+    btn_generate_pdf: 'Generate &amp; download all (PDF)',
+    format_zip: 'ZIP (images)',
+    format_pdf: 'PDF (one file)',
+    toast_pdf_lib_missing: 'The PDF library is still loading — please try again in a moment.',
+    pdf_filename: 'designs.pdf',
+    btn_csv_guide: 'How do I format my CSV?',
+    guide_title: 'How to prepare your CSV file',
+    guide_step1_title: '1. Open a spreadsheet',
+    guide_step1_body: 'Open Excel, Google Sheets, or Numbers and create a new sheet.',
+    guide_step2_title: '2. First row = column names',
+    guide_step2_body: 'The very first row must contain your field names — these become the draggable fields in the tool. For example: Name, Date, Score.',
+    guide_step3_title: '3. One row per design',
+    guide_step3_body: 'Every row after the header becomes one generated design. Fill in real values for each column.',
+    guide_step4_title: '4. Export as CSV',
+    guide_step4_body: 'Use File → Download → Comma Separated Values (.csv) in Google Sheets, or File → Save As → CSV in Excel.',
+    guide_example_title: 'Example table',
+    guide_tips_title: 'A few tips',
+    guide_tip1: 'If a value itself contains a comma, wrap it in double quotes, e.g. "Riyadh, Saudi Arabia".',
+    guide_tip2: 'Keep column names short and clear — they become the labels you drag onto the template.',
+    guide_tip3: 'Save the file with UTF-8 encoding if your data includes Arabic text, to avoid garbled characters.',
+    guide_tip4: 'Empty rows are ignored automatically, so a trailing blank line at the end of the file is fine.',
+    guide_download_sample: 'Download a sample CSV file',
+    guide_close: 'Close',
     btn_save_project: 'Save project',
     btn_import_project: 'Import project',
     ad_space: 'Ad space',
@@ -607,6 +743,30 @@ const I18N = {
     dz_csv_sub: 'الصف الأول يجب أن يكون أسماء الأعمدة',
     fields_empty: 'لا توجد حقول على الورقة بعد.',
     btn_generate: 'إنشاء وتنزيل الكل (ZIP)',
+    btn_generate_zip: 'إنشاء وتنزيل الكل (ZIP)',
+    btn_generate_pdf: 'إنشاء وتنزيل الكل (PDF)',
+    format_zip: 'ZIP (صور)',
+    format_pdf: 'PDF (ملف واحد)',
+    toast_pdf_lib_missing: 'مكتبة PDF ما زالت قيد التحميل — أعد المحاولة بعد لحظات.',
+    pdf_filename: 'التصاميم.pdf',
+    btn_csv_guide: 'كيف أُنسّق ملف CSV؟',
+    guide_title: 'كيفية تجهيز ملف CSV',
+    guide_step1_title: '١. افتح برنامج جداول بيانات',
+    guide_step1_body: 'افتح Excel أو Google Sheets أو Numbers وأنشئ ورقة جديدة.',
+    guide_step2_title: '٢. الصف الأول = أسماء الأعمدة',
+    guide_step2_body: 'يجب أن يحتوي الصف الأول على أسماء الحقول — وهي التي ستتحول إلى حقول قابلة للسحب داخل الأداة. مثال: الاسم، التاريخ، الدرجة.',
+    guide_step3_title: '٣. كل صف = تصميم واحد',
+    guide_step3_body: 'كل صف بعد صف العناوين يتحول إلى تصميم واحد يتم إنشاؤه. املأ قيماً حقيقية في كل عمود.',
+    guide_step4_title: '٤. صدّر الملف بصيغة CSV',
+    guide_step4_body: 'من Google Sheets: File → Download → Comma Separated Values (.csv)، ومن Excel: File → Save As → CSV.',
+    guide_example_title: 'مثال على الجدول',
+    guide_tips_title: 'بعض النصائح',
+    guide_tip1: 'إذا كانت القيمة نفسها تحتوي على فاصلة، ضعها بين علامتي اقتباس، مثل "الرياض، السعودية".',
+    guide_tip2: 'اجعل أسماء الأعمدة قصيرة وواضحة — فهي التسميات التي ستسحبها على القالب.',
+    guide_tip3: 'احفظ الملف بترميز UTF-8 إذا كانت بياناتك تحتوي نصاً عربياً، لتفادي ظهور رموز غير مفهومة.',
+    guide_tip4: 'الصفوف الفارغة تُتجاهل تلقائياً، فلا مشكلة من وجود سطر فارغ في نهاية الملف.',
+    guide_download_sample: 'تنزيل نموذج ملف CSV',
+    guide_close: 'إغلاق',
     btn_save_project: 'حفظ المشروع',
     btn_import_project: 'استيراد مشروع',
     ad_space: 'مساحة إعلانية',
@@ -677,6 +837,8 @@ const fieldsEmpty = $('fields-empty');
 const canvasStage = $('canvas-stage');
 const emptyCanvas = $('empty-canvas');
 const btnGenerate = $('btn-generate');
+const btnGenerateLabel = $('btn-generate-label');
+const formatSwitch = $('format-switch');
 const btnExportProject = $('btn-export-project');
 const btnClearFields = $('btn-clear-fields');
 const btnDownloadSingle = $('btn-download-single');
@@ -874,6 +1036,7 @@ function setupDragAndDropZone(zone, onFile){
 // ================================================================
 function renderCanvas(){
   if(!state.imageDataUrl) return;
+  cachedScale = null;
   canvasStage.innerHTML = '';
 
   templateImgEl = document.createElement('img');
@@ -1229,9 +1392,24 @@ function updatePreviewCount(){
 btnDownloadSingle.addEventListener('click', downloadCurrentPreview);
 
 // ================================================================
+// EXPORT FORMAT SWITCH (ZIP / PDF)
+// ================================================================
+formatSwitch.querySelectorAll('.format-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.exportFormat = btn.dataset.format;
+    formatSwitch.querySelectorAll('.format-btn').forEach(b => b.classList.toggle('active', b === btn));
+    updateGenerateButtonLabel();
+  });
+});
+function updateGenerateButtonLabel(){
+  btnGenerateLabel.innerHTML = state.exportFormat === 'pdf' ? t('btn_generate_pdf') : t('btn_generate_zip');
+}
+
+// ================================================================
 // GENERATE BUTTON STATE
 // ================================================================
 function updateGenerateButtonState(){
+  updateGenerateButtonLabel();
   const ready = !!state.imageDataUrl && state.csvRows.length > 0;
   btnGenerate.disabled = !ready;
   if(ready){
@@ -1254,16 +1432,46 @@ function updateGenerateButtonState(){
 //  with the browser's Canvas 2D API, which is dramatically faster than
 //  capturing the live DOM and keeps everything running on-device.)
 // ================================================================
-let fontsReadyPromise = null;
-function ensureFontsReady(){
-  if(!fontsReadyPromise){
-    fontsReadyPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-  }
-  return fontsReadyPromise;
+
+// Output resolution is capped adaptively: small templates are still
+// upscaled 2x for crispness, but very large uploads are capped so a
+// single row never produces an oversized canvas that slows every
+// draw + zip/pdf step down. This is the real fix for "slow bulk
+// generation" — the old bottleneck was canvas size, not file loading.
+const MAX_OUTPUT_DIM = 3000;
+let cachedScale = null;
+function getOutputScale(){
+  if(cachedScale !== null) return cachedScale;
+  const iw = templateImgEl.naturalWidth || templateImgEl.width;
+  const ih = templateImgEl.naturalHeight || templateImgEl.height;
+  const longEdge = Math.max(iw, ih);
+  cachedScale = (longEdge * 2 <= MAX_OUTPUT_DIM) ? 2 : (MAX_OUTPUT_DIM / longEdge);
+  return cachedScale;
+}
+
+// Canvas text only renders a custom font correctly once the browser has
+// actually fetched that exact family/weight/style combination — merely
+// waiting on document.fonts.ready is not enough if a particular
+// bold/italic variant was never triggered on-page yet. We explicitly
+// request every font spec currently in use before drawing anything,
+// which is what was silently causing font/style choices to be ignored
+// in the exported image.
+async function ensureFieldFontsLoaded(){
+  const specs = new Set();
+  Object.values(state.fieldStyles).forEach(f => {
+    if(!f) return;
+    const weight = f.bold ? '700' : '500';
+    const styleName = f.italic ? 'italic' : 'normal';
+    specs.add(`${styleName} ${weight} ${Math.max(16, Math.round(f.fontSize))}px "${f.fontFamily}"`);
+  });
+  try{
+    await Promise.all(Array.from(specs).map(spec => document.fonts.load(spec).catch(() => {})));
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+  }catch(e){ /* fonts API unsupported — canvas will fall back to closest available font */ }
 }
 
 function renderRowToCanvas(row){
-  const scale = 2;
+  const scale = getOutputScale();
   const iw = templateImgEl.naturalWidth || templateImgEl.width;
   const ih = templateImgEl.naturalHeight || templateImgEl.height;
   const canvas = document.createElement('canvas');
@@ -1301,7 +1509,7 @@ function yieldToUI(){ return new Promise(r => requestAnimationFrame(r)); }
 async function downloadCurrentPreview(){
   if(state.previewRowIndex < 0 || !templateImgEl) return;
   try{
-    await ensureFontsReady();
+    await ensureFieldFontsLoaded();
     const row = state.csvRows[state.previewRowIndex];
     const canvas = renderRowToCanvas(row);
     const blob = await canvasToBlob(canvas);
@@ -1315,13 +1523,16 @@ async function downloadCurrentPreview(){
   }
 }
 
-btnGenerate.addEventListener('click', runBulkGeneration);
+btnGenerate.addEventListener('click', () => {
+  if(state.exportFormat === 'pdf') runBulkGenerationPDF();
+  else runBulkGenerationZip();
+});
 
 function sanitizeFilename(str){
   return String(str).trim().replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60) || t('row_word');
 }
 
-async function runBulkGeneration(){
+async function runBulkGenerationZip(){
   if(!state.imageDataUrl || state.csvRows.length === 0 || !templateImgEl) return;
   btnGenerate.disabled = true;
   overlay.classList.add('show');
@@ -1331,7 +1542,7 @@ async function runBulkGeneration(){
   const zip = new JSZip();
 
   try{
-    await ensureFontsReady();
+    await ensureFieldFontsLoaded();
     for(let i = 0; i < total; i++){
       const row = state.csvRows[i];
       overlayText.textContent = t('overlay_generating', { i: digits(i+1), n: digits(total) });
@@ -1347,8 +1558,62 @@ async function runBulkGeneration(){
 
     overlayText.textContent = t('overlay_compressing');
     overlayFill.style.width = '96%';
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    // PNGs are already compressed, so re-deflating them (JSZip's default)
+    // burns a lot of CPU for almost no size benefit — STORE just packs
+    // them as-is, which is dramatically faster for large batches.
+    const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
     downloadBlob(zipBlob, t('zip_filename'));
+
+    overlayFill.style.width = '100%';
+    overlayText.textContent = t('overlay_done', { n: digits(total) });
+    await wait(500);
+    showToast(t('toast_generation_success', { n: digits(total) }));
+  } catch(err){
+    console.error(err);
+    showToast(t('toast_generation_error'), true);
+  } finally {
+    overlay.classList.remove('show');
+    overlayFill.style.width = '0%';
+    btnGenerate.disabled = false;
+  }
+}
+
+async function runBulkGenerationPDF(){
+  if(!state.imageDataUrl || state.csvRows.length === 0 || !templateImgEl) return;
+  if(!window.jspdf){ showToast(t('toast_pdf_lib_missing'), true); return; }
+  btnGenerate.disabled = true;
+  overlay.classList.add('show');
+
+  const total = state.csvRows.length;
+  const { jsPDF } = window.jspdf;
+  let pdf = null;
+
+  try{
+    await ensureFieldFontsLoaded();
+    for(let i = 0; i < total; i++){
+      const row = state.csvRows[i];
+      overlayText.textContent = t('overlay_generating', { i: digits(i+1), n: digits(total) });
+      overlayFill.style.width = `${Math.round((i / total) * 92)}%`;
+
+      const canvas = renderRowToCanvas(row);
+      // JPEG keeps the PDF a reasonable size across many pages; quality
+      // 0.92 is visually lossless for certificate-style flat artwork.
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const orientation = canvas.width >= canvas.height ? 'l' : 'p';
+
+      if(!pdf){
+        pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height], compress: true });
+      } else {
+        pdf.addPage([canvas.width, canvas.height], orientation);
+      }
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+
+      if(i % 5 === 0) await yieldToUI();
+    }
+
+    overlayText.textContent = t('overlay_compressing');
+    overlayFill.style.width = '96%';
+    pdf.save(t('pdf_filename'));
 
     overlayFill.style.width = '100%';
     overlayText.textContent = t('overlay_done', { n: digits(total) });
@@ -1419,6 +1684,38 @@ inputProject.addEventListener('change', (e) => {
     cookieBanner.classList.remove('show');
   });
 })();
+
+// ================================================================
+// CSV GUIDE MODAL
+// ================================================================
+const csvGuideModal = $('csv-guide-modal');
+const btnCsvGuide = $('btn-csv-guide');
+const csvGuideClose = $('csv-guide-close');
+const btnGuideClose2 = $('btn-guide-close-2');
+const btnDownloadSampleCsv = $('btn-download-sample-csv');
+
+function openCsvGuide(){ csvGuideModal.classList.add('show'); }
+function closeCsvGuide(){ csvGuideModal.classList.remove('show'); }
+btnCsvGuide.addEventListener('click', openCsvGuide);
+csvGuideClose.addEventListener('click', closeCsvGuide);
+btnGuideClose2.addEventListener('click', closeCsvGuide);
+csvGuideModal.addEventListener('click', (e) => { if(e.target === csvGuideModal) closeCsvGuide(); });
+window.addEventListener('keydown', (e) => { if(e.key === 'Escape' && csvGuideModal.classList.contains('show')) closeCsvGuide(); });
+
+btnDownloadSampleCsv.addEventListener('click', () => {
+  const sample = 'Name,Date,Score\nSara Ahmed,2026-06-01,95\nOmar Khalid,2026-06-01,88\n"Lina, Youssef",2026-06-01,91\n';
+  const blob = new Blob(['\uFEFF' + sample], { type: 'text/csv;charset=utf-8;' }); // BOM keeps Arabic/UTF-8 text intact when opened in Excel
+  downloadBlob(blob, 'sample.csv');
+});
+
+// ================================================================
+// SERVICE WORKER (caches static assets so repeat visits load instantly)
+// ================================================================
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* offline caching just won't be available — the tool still works fully without it */ });
+  });
+}
 
 // ================================================================
 // INITIAL STATE
