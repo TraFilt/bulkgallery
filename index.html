@@ -5,13 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BulkGallery — Generate Certificates & Designs in Bulk</title>
 <meta name="description" content="A free tool to generate hundreds of certificates and designs at once from a template and a CSV file — runs entirely in your browser, nothing is uploaded to any server." />
-<link rel="canonical" href="https://bulkgallery.com/index.html" />
+<link rel="canonical" href="https://bulkgallery.com/" />
+
+<!-- Open Graph / social sharing -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="BulkGallery" />
+<meta property="og:title" content="BulkGallery — Generate Certificates & Designs in Bulk, Free" />
+<meta property="og:description" content="Turn one template and a CSV file into hundreds of certificates or designs in minutes. Free, no signup, runs entirely in your browser." />
+<meta property="og:url" content="https://bulkgallery.com/" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="BulkGallery — Generate Certificates & Designs in Bulk, Free" />
+<meta name="twitter:description" content="Turn one template and a CSV file into hundreds of certificates or designs in minutes. Free, no signup, runs entirely in your browser." />
+
+<!-- Structured data so Google can understand what this page is -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "BulkGallery",
+  "url": "https://bulkgallery.com/",
+  "description": "A free tool to generate hundreds of certificates and designs at once from a template and a CSV file, entirely in the browser.",
+  "applicationCategory": "DesignApplication",
+  "operatingSystem": "Any (runs in a web browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
 <!--
   Paste your Google AdSense site-verification script here once you have a publisher ID:
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Tajawal:wght@400;500;700&family=Amiri&family=Almarai:wght@400;700&family=Reem+Kufi&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Tajawal:wght@400;500;700&family=Amiri&family=Almarai:wght@400;700&family=Reem+Kufi&family=Montserrat:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <style>
@@ -95,7 +120,6 @@ svg{ display:block; }
   display:flex; align-items:center; gap:14px;
   padding-inline:24px;
   position:relative; z-index:20;
-  background-image: repeating-radial-gradient(circle at 92% 50%, rgba(228,196,104,0.10) 0 1.5px, transparent 1.5px 9px);
 }
 .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; flex-shrink:0; }
 .brand .seal-mark{ width:30px; height:30px; }
@@ -173,6 +197,35 @@ svg{ display:block; }
 }
 .csv-guide-link:hover{ color:var(--gold-300); text-decoration:underline; }
 
+.data-mode-tabs{ display:flex; gap:6px; background:var(--ink-800); border:1px solid var(--ink-line); border-radius:var(--r-md); padding:4px; margin-bottom:12px; }
+.data-mode-btn{
+  flex:1; background:transparent; border:none; color:var(--text-on-dark-muted); font-size:12px; font-weight:700;
+  padding:8px 6px; border-radius:var(--r-sm); cursor:pointer; font-family:'Cairo',sans-serif;
+  display:flex; align-items:center; justify-content:center; gap:5px; transition:all .12s ease;
+}
+.data-mode-btn.active{ background:var(--gold-500); color:var(--ink-950); }
+.data-mode-btn:not(.active):hover{ color:var(--text-on-dark); }
+
+.manual-hint{ font-size:11px; color:var(--text-on-dark-muted); margin-bottom:10px; line-height:1.6; }
+.manual-table-wrap{ overflow-x:auto; border:1px solid var(--ink-line); border-radius:var(--r-sm); max-width:100%; }
+.manual-table{ border-collapse:collapse; width:100%; min-width:280px; }
+.manual-table th, .manual-table td{ border-bottom:1px solid var(--ink-line); border-inline-end:1px solid var(--ink-line); padding:0; }
+.manual-table thead th{ background:var(--ink-800); }
+.manual-table th:first-child, .manual-table td:first-child{ width:26px; border-inline-end:1px solid var(--ink-line); }
+.manual-table input[type=text]{
+  width:100%; min-width:90px; box-sizing:border-box; background:transparent; border:none; color:var(--text-on-dark);
+  font-size:12px; padding:8px 8px; font-family:'Tajawal',sans-serif;
+}
+.manual-table thead input[type=text]{ font-weight:700; font-family:'Cairo',sans-serif; color:var(--gold-400); }
+.manual-table input[type=text]:focus{ outline:2px solid var(--gold-500); outline-offset:-2px; }
+.manual-col-del, .manual-row-del{
+  border:none; background:transparent; color:var(--text-on-dark-muted); cursor:pointer; font-size:12px;
+  width:100%; height:100%; padding:6px; display:flex; align-items:center; justify-content:center;
+}
+.manual-col-del:hover, .manual-row-del:hover{ color:#fff; background:var(--danger); }
+.manual-table-actions{ display:flex; gap:8px; margin-top:10px; }
+.manual-table-actions .btn-outline{ flex:1; }
+
 .field-empty{
   font-size:12px; color:var(--text-on-dark-muted); text-align:center; padding:22px 10px; line-height:1.7;
   border:1px dashed var(--ink-700); border-radius:var(--r-md);
@@ -245,14 +298,22 @@ svg{ display:block; }
    WORKSPACE
    ================================================================ */
 .workspace{
-  flex:1; min-width:0; overflow:auto; display:flex; flex-direction:column; align-items:center;
-  padding:var(--sp-8) var(--sp-6) 60px; background:var(--paper-50);
-  background-image: repeating-radial-gradient(circle at 0% 0%, rgba(201,151,58,0.05) 0 1.5px, transparent 1.5px 11px);
+  flex:1; min-width:0; overflow:auto;
+  padding:var(--sp-8) var(--sp-6) 60px;
+  background:linear-gradient(180deg, var(--paper-50), var(--paper-100));
+}
+.workspace-row{
+  display:flex; align-items:flex-start; gap:var(--sp-5);
+  max-width:1180px; margin:0 auto; width:100%;
 }
 
+/* Side panel: holds the field palette + preview controls. Sticky so it
+   stays reachable even when a tall (portrait) template forces the page
+   to scroll — this is what was "disappearing" before. */
 .dock{
-  width:100%; max-width:940px; background:var(--ink-900); border-radius:var(--r-lg);
-  box-shadow:var(--shadow-md); color:var(--text-on-dark); margin-bottom:var(--sp-5); overflow:hidden; display:none;
+  width:300px; flex-shrink:0; background:var(--ink-900); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-md); color:var(--text-on-dark); overflow:hidden; display:none;
+  position:sticky; top:var(--sp-5); max-height:calc(100vh - 100px); overflow-y:auto;
 }
 .dock.show{ display:block; }
 .dock-section{ padding:var(--sp-4) var(--sp-5); }
@@ -269,9 +330,8 @@ svg{ display:block; }
 .palette-chip .grip{ font-size:10px; opacity:0.55; }
 .palette-empty{ font-size:12px; color:var(--text-on-dark-muted); }
 
-.dock-toolrow{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-.preview-nav{ display:flex; align-items:center; gap:6px; }
-.preview-nav .count{ font-size:12px; color:var(--text-on-dark-muted); min-width:76px; text-align:center; }
+.preview-nav{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.preview-nav .count{ font-size:12px; color:var(--text-on-dark-muted); min-width:60px; text-align:center; }
 .switch{ display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; color:var(--text-on-dark); user-select:none; }
 .switch input{ display:none; }
 .switch .track{ width:36px; height:20px; border-radius:999px; background:var(--ink-700); position:relative; transition:background .15s ease; flex-shrink:0; }
@@ -280,9 +340,33 @@ svg{ display:block; }
 .switch input:checked + .track::after{ transform:translateX(-16px); background:var(--gold-300); }
 html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px); }
 
-.canvas-card{ display:flex; flex-direction:column; align-items:center; gap:var(--sp-3); width:100%; max-width:940px; }
+.canvas-main{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:var(--sp-3); }
 .canvas-hint{ font-size:12px; color:var(--text-on-paper-muted); text-align:center; }
 .canvas-hint b{ color:var(--gold-600); }
+
+@media (max-width: 900px){
+  .workspace-row{ flex-direction:column; }
+  .dock{ width:100%; position:static; max-height:none; margin-bottom:var(--sp-5); }
+}
+
+.mobile-control-pad{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center;
+  background:var(--ink-900); border-radius:999px; padding:8px 10px; box-shadow:var(--shadow-md);
+  color:var(--text-on-dark);
+}
+.mcp-label{
+  font-family:'Cairo',sans-serif; font-weight:700; font-size:12px; color:var(--gold-400);
+  padding-inline-start:6px; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.mcp-group{ display:flex; gap:4px; background:var(--ink-800); border-radius:999px; padding:3px; }
+.mcp-btn{
+  width:32px; height:32px; border-radius:50%; border:none; background:transparent; color:var(--text-on-dark);
+  font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .12s ease;
+}
+.mcp-btn:hover{ background:var(--ink-700); }
+.mcp-btn.mcp-font{ border-radius:8px; width:30px; font-weight:700; font-size:11px; font-family:'Cairo',sans-serif; }
+.mcp-btn.mcp-done{ background:var(--gold-500); color:var(--ink-950); width:32px; height:32px; }
+.mcp-btn.mcp-done:hover{ background:var(--gold-400); }
 
 #canvas-stage{
   position:relative; background:#fff; border-radius:var(--r-lg); box-shadow:var(--shadow-lg);
@@ -294,14 +378,14 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
 .empty-canvas{
   width:860px; max-width:100%; aspect-ratio:1.5/1; display:flex; align-items:center; justify-content:center;
   flex-direction:column; gap:12px; color:var(--text-on-paper-muted);
-  background: repeating-radial-gradient(circle at 50% 50%, rgba(201,151,58,0.10) 0 1.5px, transparent 1.5px 12px), var(--paper-100);
+  background:var(--paper-100);
   border:2px dashed var(--paper-line);
 }
 .empty-canvas .seal-mark{ width:44px; height:44px; opacity:0.7; }
 .empty-canvas .big{ font-size:16px; font-weight:700; color:var(--text-on-paper); font-family:'Cairo',sans-serif; }
 .empty-canvas .small{ font-size:12.5px; max-width:340px; text-align:center; line-height:1.7; }
 
-#template-img{ display:block; max-width:860px; width:100%; height:auto; -webkit-user-drag:none; user-select:none; }
+#template-img{ display:block; max-width:860px; width:auto; height:auto; max-height:80vh; -webkit-user-drag:none; user-select:none; }
 
 .snap-guide{ position:absolute; background:var(--gold-500); pointer-events:none; opacity:0; z-index:15; }
 .snap-guide.v{ top:0; bottom:0; width:1px; left:50%; }
@@ -350,6 +434,49 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
 .cookie-banner p{ margin:0; font-size:12.5px; max-width:640px; text-align:center; line-height:1.7; color:var(--text-on-dark-muted); }
 .cookie-banner a{ color:var(--gold-400); }
 .cookie-banner .btn-gold{ width:auto; padding:9px 20px; flex-shrink:0; }
+
+/* ================================================================
+   MARKETING SECTIONS (How it works / Features / FAQ / Footer)
+   ================================================================ */
+.marketing-section{ padding:64px 24px; }
+.marketing-section.alt{ background:var(--paper-100); }
+.section-inner{ max-width:960px; margin:0 auto; }
+.section-eyebrow{
+  font-size:12px; font-weight:700; color:var(--gold-600); text-align:center;
+  text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; font-family:'Cairo',sans-serif;
+}
+.marketing-section h2{ font-family:'Cairo',sans-serif; font-size:25px; font-weight:800; color:var(--text-on-paper); text-align:center; margin:0 0 14px; }
+.section-lead{ font-size:14.5px; color:var(--text-on-paper-muted); text-align:center; max-width:620px; margin:0 auto; line-height:1.8; }
+
+.hiw-steps{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-top:40px; }
+.hiw-step{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:8px; }
+.hiw-num{
+  width:38px; height:38px; border-radius:50%; background:var(--gold-500); color:var(--ink-950);
+  font-family:'Cairo',sans-serif; font-weight:800; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.hiw-step h3{ font-family:'Cairo',sans-serif; font-size:14.5px; font-weight:700; color:var(--text-on-paper); margin:0; }
+.hiw-step p{ font-size:12.5px; color:var(--text-on-paper-muted); line-height:1.7; margin:0; }
+
+.features-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:40px; }
+.feature-card{ background:var(--paper-50); border:1px solid var(--paper-line); border-radius:var(--r-md); padding:22px; text-align:center; box-shadow:var(--shadow-sm); }
+.feature-icon{ font-size:26px; display:block; margin-bottom:10px; }
+.feature-card h3{ font-family:'Cairo',sans-serif; font-size:14px; font-weight:700; margin:0 0 6px; color:var(--text-on-paper); }
+.feature-card p{ font-size:12.5px; color:var(--text-on-paper-muted); line-height:1.6; margin:0; }
+
+.faq-list{ max-width:720px; margin:40px auto 0; display:flex; flex-direction:column; gap:10px; }
+.faq-list details{ background:var(--paper-50); border:1px solid var(--paper-line); border-radius:var(--r-md); padding:16px 18px; }
+.faq-list summary{ font-family:'Cairo',sans-serif; font-weight:700; font-size:13.5px; cursor:pointer; color:var(--text-on-paper); }
+.faq-list p{ font-size:13px; color:var(--text-on-paper-muted); margin:10px 0 0; line-height:1.7; }
+
+.site-footer{ background:var(--ink-950); color:var(--text-on-dark-muted); padding:40px 24px 26px; }
+.footer-inner{ display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; }
+.footer-brand{ display:flex; align-items:center; gap:8px; }
+.footer-brand .seal-mark{ width:22px; height:22px; }
+.footer-brand span{ font-family:'Cairo',sans-serif; font-weight:800; color:var(--text-on-dark); font-size:14px; }
+.footer-links{ display:flex; gap:22px; flex-wrap:wrap; justify-content:center; }
+.footer-links a{ color:var(--text-on-dark-muted); text-decoration:none; font-size:12.5px; font-weight:600; }
+.footer-links a:hover{ color:var(--gold-400); }
+.footer-copy{ font-size:11.5px; color:var(--text-on-dark-muted); opacity:0.75; }
 
 /* ================================================================
    CSV GUIDE MODAL
@@ -443,18 +570,41 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
 
       <div class="step">
         <div class="step-head"><span class="step-num" id="step-num-2">2</span><span class="step-title" data-i18n="step2_title">Spreadsheet data</span></div>
-        <label class="dropzone" id="dz-csv">
-          <input type="file" id="input-csv" accept=".csv" />
-          <span class="dz-icon">📄</span>
-          <span class="dz-text" data-i18n="dz_csv_text">Click or drop a CSV file</span>
-          <span class="dz-sub" data-i18n="dz_csv_sub">First row must be column headers</span>
-          <span class="dz-filename" id="csv-filename"></span>
-        </label>
+
+        <div class="data-mode-tabs" id="data-mode-tabs">
+          <button type="button" class="data-mode-btn active" data-mode="upload">📄 <span data-i18n="mode_upload">Upload a file</span></button>
+          <button type="button" class="data-mode-btn" data-mode="manual">✍️ <span data-i18n="mode_manual">Type it in</span></button>
+        </div>
+
+        <div id="upload-mode-panel">
+          <label class="dropzone" id="dz-csv">
+            <input type="file" id="input-csv" accept=".csv" />
+            <span class="dz-icon">📄</span>
+            <span class="dz-text" data-i18n="dz_csv_text">Click or drop a CSV file</span>
+            <span class="dz-sub" data-i18n="dz_csv_sub">First row must be column headers</span>
+            <span class="dz-filename" id="csv-filename"></span>
+          </label>
+          <button type="button" class="csv-guide-link" id="btn-csv-guide">📚 <span data-i18n="btn_csv_guide">How do I format my CSV?</span></button>
+        </div>
+
+        <div id="manual-mode-panel" style="display:none;">
+          <div class="manual-hint" data-i18n="manual_hint">No file needed — type your column names and data directly below.</div>
+          <div class="manual-table-wrap">
+            <table class="manual-table" id="manual-table">
+              <thead id="manual-table-head"></thead>
+              <tbody id="manual-table-body"></tbody>
+            </table>
+          </div>
+          <div class="manual-table-actions">
+            <button type="button" class="btn-outline" id="btn-add-column">+ <span data-i18n="add_column">Column</span></button>
+            <button type="button" class="btn-outline" id="btn-add-row">+ <span data-i18n="add_row">Row</span></button>
+          </div>
+        </div>
+
         <div class="data-summary" id="data-summary"></div>
-        <button type="button" class="csv-guide-link" id="btn-csv-guide">📚 <span data-i18n="btn_csv_guide">How do I format my CSV?</span></button>
       </div>
 
-      <div class="step">
+      <div class="step" id="step3-container" style="display:none;">
         <div class="step-head"><span class="step-num" id="step-num-3">3</span><span class="step-title" data-i18n="step3_title">Field styling</span></div>
         <div class="step-desc" data-i18n="step3_desc">Drag a field from the bar above onto the page first, then style it here.</div>
         <div id="fields-container">
@@ -493,14 +643,43 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
     </aside>
 
     <main class="workspace">
+      <div class="workspace-row">
 
-      <div class="dock" id="dock">
-        <div class="dock-section">
-          <div class="dock-label" data-i18n="palette_hint">🗂️ Available fields — drag &amp; drop onto the page, or click to add instantly</div>
-          <div class="palette-chips" id="field-palette-chips"></div>
+        <div class="canvas-main">
+          <div class="canvas-hint" id="canvas-hint" data-i18n="canvas_hint">🖱️ Drag a field from the panel onto the page · <b>Click</b> a field to select it, then use the <b>arrow keys</b> to nudge it precisely</div>
+
+          <div class="mobile-control-pad" id="mobile-control-pad" style="display:none;">
+            <span class="mcp-label" id="mcp-label"></span>
+            <div class="mcp-group">
+              <button type="button" class="mcp-btn" data-action="left" data-i18n-title="mcp_left" title="Move left">◀</button>
+              <button type="button" class="mcp-btn" data-action="up" data-i18n-title="mcp_up" title="Move up">▲</button>
+              <button type="button" class="mcp-btn" data-action="down" data-i18n-title="mcp_down" title="Move down">▼</button>
+              <button type="button" class="mcp-btn" data-action="right" data-i18n-title="mcp_right" title="Move right">▶</button>
+            </div>
+            <div class="mcp-group">
+              <button type="button" class="mcp-btn mcp-font" data-action="font-dec" data-i18n-title="mcp_font_dec" title="Smaller text">A−</button>
+              <button type="button" class="mcp-btn mcp-font" data-action="font-inc" data-i18n-title="mcp_font_inc" title="Larger text">A+</button>
+            </div>
+            <button type="button" class="mcp-btn mcp-done" data-action="deselect" data-i18n-title="mcp_done" title="Done">✓</button>
+          </div>
+          <div id="canvas-stage">
+            <div class="empty-canvas" id="empty-canvas">
+              <svg class="seal-mark" viewBox="0 0 44 44" fill="none">
+                <circle cx="22" cy="22" r="20" stroke="#C9973A" stroke-width="1.4" opacity="0.6"/>
+                <circle cx="22" cy="22" r="9" fill="none" stroke="#C9973A" stroke-width="1.2" opacity="0.6"/>
+              </svg>
+              <span class="big" data-i18n="empty_big">Your template will appear here</span>
+              <span class="small" data-i18n="empty_small">Upload an image from the sidebar to start. Once you upload a CSV, its column names will appear as fields in the panel beside the page — drag whichever you need onto the template.</span>
+            </div>
+          </div>
         </div>
-        <div class="dock-section">
-          <div class="dock-toolrow">
+
+        <aside class="dock" id="dock">
+          <div class="dock-section">
+            <div class="dock-label" data-i18n="palette_hint">🗂️ Available fields — drag &amp; drop onto the page, or click to add instantly</div>
+            <div class="palette-chips" id="field-palette-chips"></div>
+          </div>
+          <div class="dock-section">
             <label class="switch">
               <input type="checkbox" id="preview-toggle" />
               <span class="track"></span>
@@ -510,25 +689,21 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
               <button class="icon-btn" id="preview-prev" title="Previous row">‹</button>
               <span class="count" id="preview-count">1 of 1</span>
               <button class="icon-btn" id="preview-next" title="Next row">›</button>
-              <button class="btn-outline" id="btn-download-single" style="width:auto; padding:8px 12px;">⬇️ <span data-i18n="btn_download_single">Download this design</span></button>
+              <button class="btn-outline" id="btn-download-single" style="width:100%; margin-top:8px;">⬇️ <span data-i18n="btn_download_single">Download this design</span></button>
             </div>
-            <button class="btn-outline" id="btn-clear-fields" style="width:auto; padding:8px 12px;">🧹 <span data-i18n="btn_clear_fields">Clear all fields</span></button>
+            <button class="btn-outline" id="btn-clear-fields" style="width:100%; margin-top:8px;">🧹 <span data-i18n="btn_clear_fields">Clear all fields</span></button>
           </div>
-        </div>
-      </div>
 
-      <div class="canvas-card">
-        <div class="canvas-hint" id="canvas-hint" data-i18n="canvas_hint">🖱️ Drag a field from the bar above onto the page · <b>Click</b> a field to select it, then use the <b>arrow keys</b> to nudge it precisely</div>
-        <div id="canvas-stage">
-          <div class="empty-canvas" id="empty-canvas">
-            <svg class="seal-mark" viewBox="0 0 44 44" fill="none">
-              <circle cx="22" cy="22" r="20" stroke="#C9973A" stroke-width="1.4" opacity="0.6"/>
-              <circle cx="22" cy="22" r="9" fill="none" stroke="#C9973A" stroke-width="1.2" opacity="0.6"/>
-            </svg>
-            <span class="big" data-i18n="empty_big">Your template will appear here</span>
-            <span class="small" data-i18n="empty_small">Upload an image from the sidebar to start. Once you upload a CSV, its column names will appear as fields in the bar above — drag whichever you need onto the template.</span>
+          <!-- ================= GOOGLE ADSENSE AD SLOT (SIDE PANEL) =================
+               Replace the line below with your real <ins class="adsbygoogle">...</ins>
+               + <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+               once your AdSense ad unit is created. -->
+          <div class="dock-section">
+            <div class="ad-slot sidebar-ad" data-i18n="ad_space">Ad space</div>
           </div>
-        </div>
+          <!-- ================= END GOOGLE ADSENSE AD SLOT ================= -->
+        </aside>
+
       </div>
 
       <!-- ================= GOOGLE ADSENSE AD SLOT (BELOW WORKSPACE) =================
@@ -541,6 +716,103 @@ html[dir="rtl"] .switch input:checked + .track::after{ transform:translateX(16px
 
   </div>
 </div>
+
+<!-- ================================================================
+     HOW IT WORKS
+     ================================================================ -->
+<section class="marketing-section" id="how-it-works">
+  <div class="section-inner">
+    <div class="section-eyebrow" data-i18n="hiw_eyebrow">How it works</div>
+    <h2 data-i18n="hiw_title">From one template to hundreds of designs, in minutes</h2>
+    <p class="section-lead" data-i18n="hiw_lead">No design software, no manual copy-pasting — upload once, generate everything at once, all inside your browser.</p>
+    <div class="hiw-steps">
+      <div class="hiw-step"><span class="hiw-num">1</span><h3 data-i18n="hiw_step1_title">Upload your template</h3><p data-i18n="hiw_step1_body">A certificate, badge, or card design as a PNG or JPG image.</p></div>
+      <div class="hiw-step"><span class="hiw-num">2</span><h3 data-i18n="hiw_step2_title">Add your data</h3><p data-i18n="hiw_step2_body">Upload a CSV file, or type names and values directly — no spreadsheet needed.</p></div>
+      <div class="hiw-step"><span class="hiw-num">3</span><h3 data-i18n="hiw_step3_title">Place your fields</h3><p data-i18n="hiw_step3_body">Drag each field onto the template and style its font, size, and color.</p></div>
+      <div class="hiw-step"><span class="hiw-num">4</span><h3 data-i18n="hiw_step4_title">Generate &amp; download</h3><p data-i18n="hiw_step4_body">Get every design at once as a ZIP of images or a single PDF file.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GOOGLE ADSENSE AD SLOT (BETWEEN HOW-IT-WORKS AND FEATURES) =================
+     Replace the line below with your real <ins class="adsbygoogle">...</ins>
+     + <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+     once your AdSense ad unit is created. -->
+<div class="marketing-section alt" style="padding-top:0; padding-bottom:0;">
+  <div class="section-inner"><div class="ad-slot" data-i18n="ad_space">Ad space</div></div>
+</div>
+<!-- ================= END GOOGLE ADSENSE AD SLOT ================= -->
+
+<!-- ================================================================
+     FEATURES
+     ================================================================ -->
+<section class="marketing-section alt" id="features">
+  <div class="section-inner">
+    <div class="section-eyebrow" data-i18n="features_eyebrow">Features</div>
+    <h2 data-i18n="features_title">Built to make bulk design painless</h2>
+    <div class="features-grid">
+      <div class="feature-card"><span class="feature-icon">🆓</span><h3 data-i18n="feat1_title">100% free</h3><p data-i18n="feat1_body">No subscription, no hidden limits on rows or designs.</p></div>
+      <div class="feature-card"><span class="feature-icon">🚫</span><h3 data-i18n="feat2_title">No signup</h3><p data-i18n="feat2_body">Open the page and start — no account, no email required.</p></div>
+      <div class="feature-card"><span class="feature-icon">⚡</span><h3 data-i18n="feat3_title">Fast</h3><p data-i18n="feat3_body">Native browser rendering generates hundreds of designs in seconds.</p></div>
+      <div class="feature-card"><span class="feature-icon">🔒</span><h3 data-i18n="feat4_title">Private by design</h3><p data-i18n="feat4_body">Your images and data are never uploaded to any server.</p></div>
+      <div class="feature-card"><span class="feature-icon">🌐</span><h3 data-i18n="feat5_title">English &amp; Arabic</h3><p data-i18n="feat5_body">Full bilingual interface with proper right-to-left support.</p></div>
+      <div class="feature-card"><span class="feature-icon">📦</span><h3 data-i18n="feat6_title">ZIP or PDF export</h3><p data-i18n="feat6_body">Download everything as separate images or one combined PDF.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     FAQ
+     ================================================================ -->
+<section class="marketing-section" id="faq">
+  <div class="section-inner">
+    <div class="section-eyebrow" data-i18n="faq_eyebrow">FAQ</div>
+    <h2 data-i18n="faq_title">Frequently asked questions</h2>
+    <div class="faq-list">
+      <details open>
+        <summary data-i18n="home_faq1_q">Is BulkGallery really free?</summary>
+        <p data-i18n="home_faq1_a">Yes — it's free to use with no limits on the number of designs you generate.</p>
+      </details>
+      <details>
+        <summary data-i18n="home_faq2_q">Does it save or upload my data anywhere?</summary>
+        <p data-i18n="home_faq2_a">No. Your template image and data are processed entirely inside your browser and are never sent to a server.</p>
+      </details>
+      <details>
+        <summary data-i18n="home_faq3_q">Can I use it on my phone?</summary>
+        <p data-i18n="home_faq3_a">Yes — the tool works on mobile, with tap-to-place fields and on-screen controls instead of dragging.</p>
+      </details>
+      <details>
+        <summary data-i18n="home_faq4_q">Do I need to know Excel or CSV formatting?</summary>
+        <p data-i18n="home_faq4_a">No — you can type your data directly into a simple table inside the tool, no spreadsheet knowledge required.</p>
+      </details>
+      <details>
+        <summary data-i18n="home_faq5_q">What file formats can I download?</summary>
+        <p data-i18n="home_faq5_a">Choose a ZIP file of individual PNG images, or one combined multi-page PDF.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
+<footer class="site-footer">
+  <div class="section-inner footer-inner">
+    <div class="footer-brand">
+      <svg class="seal-mark" viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" stroke="#E4C468" stroke-width="1.4" opacity="0.85"/>
+        <circle cx="22" cy="22" r="9" fill="#E4C468" opacity="0.15" stroke="#E4C468" stroke-width="1.2"/>
+      </svg>
+      <span>bulkgallery.com</span>
+    </div>
+    <nav class="footer-links">
+      <a href="privacy-policy.html" data-i18n="footer_privacy">Privacy Policy</a>
+      <a href="about.html" data-i18n="footer_contact">Contact / Support</a>
+      <a href="terms.html" data-i18n="link_terms">Terms of Use</a>
+    </nav>
+    <div class="footer-copy" data-i18n="footer_copy">© 2026 BulkGallery. All rights reserved.</div>
+  </div>
+</footer>
 
 <div class="overlay" id="overlay">
   <div class="overlay-card">
@@ -632,9 +904,11 @@ const state = {
 
 const FONT_OPTIONS = [
   'Cairo', 'Tajawal', 'Almarai', 'Amiri', 'Reem Kufi',
-  'Arial', 'Tahoma', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS'
+  'Montserrat', 'Roboto', 'Arial', 'Tahoma', 'Times New Roman', 'Georgia', 'Courier New', 'Verdana', 'Trebuchet MS'
 ];
 const ARABIC_DIGITS = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+const ARABIC_TEXT_RE = /[\u0600-\u06FF\u0750-\u077F]/;
+function containsArabic(str){ return ARABIC_TEXT_RE.test(String(str || '')); }
 function toArabicDigits(n){ return String(n).replace(/[0-9]/g, d => ARABIC_DIGITS[d]); }
 function digits(n){ return state.lang === 'ar' ? toArabicDigits(n) : String(n); }
 
@@ -689,9 +963,9 @@ const I18N = {
     preview_label: 'Preview with real data',
     btn_download_single: 'Download this design',
     btn_clear_fields: 'Clear all fields',
-    canvas_hint: '🖱️ Drag a field from the bar above onto the page · <b>Click</b> a field to select it, then use the <b>arrow keys</b> to nudge it precisely',
+    canvas_hint: '🖱️ Drag a field from the panel onto the page · <b>Click</b> a field to select it, then use the <b>arrow keys</b> to nudge it precisely',
     empty_big: 'Your template will appear here',
-    empty_small: 'Upload an image from the sidebar to start. Once you upload a CSV, its column names will appear as fields in the bar above — drag whichever you need onto the template.',
+    empty_small: 'Upload an image from the sidebar to start. Once you upload a CSV, its column names will appear as fields in the panel beside the page — drag whichever you need onto the template.',
     cookie_text: 'We use cookies to improve your experience, and Google AdSense may use them to show personalized ads. By continuing to use the site, you agree to our <a href="privacy-policy.html" target="_blank">Privacy Policy</a>.',
     cookie_accept: 'Accept',
     status_start: 'Upload a template image and a data file to begin',
@@ -720,6 +994,57 @@ const I18N = {
     toast_single_download_ok: 'This design has been downloaded.',
     toast_single_download_err: 'Could not download this design.',
     toast_generation_error: 'An error occurred during generation. Check the console for details.',
+    toast_large_batch_warning: 'Large batch + high-resolution template detected — this may take a while and use significant memory. If your browser struggles, try a smaller batch.',
+    mode_upload: 'Upload a file',
+    mode_manual: 'Type it in',
+    manual_hint: 'No file needed — type your column names and data directly below.',
+    add_column: 'Column',
+    add_row: 'Row',
+    manual_default_col1: 'Name',
+    manual_default_col2: 'Date',
+    manual_new_column: 'Column',
+    remove_column: 'Remove this column',
+    remove_row: 'Remove this row',
+    mcp_left: 'Move left', mcp_up: 'Move up', mcp_down: 'Move down', mcp_right: 'Move right',
+    mcp_font_dec: 'Smaller text', mcp_font_inc: 'Larger text', mcp_done: 'Done',
+
+    hiw_eyebrow: 'How it works',
+    hiw_title: 'From one template to hundreds of designs, in minutes',
+    hiw_lead: "No design software, no manual copy-pasting — upload once, generate everything at once, all inside your browser.",
+    hiw_step1_title: 'Upload your template',
+    hiw_step1_body: 'A certificate, badge, or card design as a PNG or JPG image.',
+    hiw_step2_title: 'Add your data',
+    hiw_step2_body: 'Upload a CSV file, or type names and values directly — no spreadsheet needed.',
+    hiw_step3_title: 'Place your fields',
+    hiw_step3_body: 'Drag each field onto the template and style its font, size, and color.',
+    hiw_step4_title: 'Generate &amp; download',
+    hiw_step4_body: 'Get every design at once as a ZIP of images or a single PDF file.',
+
+    features_eyebrow: 'Features',
+    features_title: 'Built to make bulk design painless',
+    feat1_title: '100% free', feat1_body: 'No subscription, no hidden limits on rows or designs.',
+    feat2_title: 'No signup', feat2_body: 'Open the page and start — no account, no email required.',
+    feat3_title: 'Fast', feat3_body: 'Native browser rendering generates hundreds of designs in seconds.',
+    feat4_title: 'Private by design', feat4_body: 'Your images and data are never uploaded to any server.',
+    feat5_title: 'English &amp; Arabic', feat5_body: 'Full bilingual interface with proper right-to-left support.',
+    feat6_title: 'ZIP or PDF export', feat6_body: 'Download everything as separate images or one combined PDF.',
+
+    faq_eyebrow: 'FAQ',
+    faq_title: 'Frequently asked questions',
+    home_faq1_q: 'Is BulkGallery really free?',
+    home_faq1_a: "Yes — it's free to use with no limits on the number of designs you generate.",
+    home_faq2_q: 'Does it save or upload my data anywhere?',
+    home_faq2_a: 'No. Your template image and data are processed entirely inside your browser and are never sent to a server.',
+    home_faq3_q: 'Can I use it on my phone?',
+    home_faq3_a: 'Yes — the tool works on mobile, with tap-to-place fields and on-screen controls instead of dragging.',
+    home_faq4_q: 'Do I need to know Excel or CSV formatting?',
+    home_faq4_a: 'No — you can type your data directly into a simple table inside the tool, no spreadsheet knowledge required.',
+    home_faq5_q: 'What file formats can I download?',
+    home_faq5_a: 'Choose a ZIP file of individual PNG images, or one combined multi-page PDF.',
+
+    footer_privacy: 'Privacy Policy',
+    footer_contact: 'Contact / Support',
+    footer_copy: '© 2026 BulkGallery. All rights reserved.',
     toast_generation_success: 'Successfully generated {n} designs and downloaded them in one ZIP file.',
     toast_need_image_before_save: 'Upload a template before saving.',
     toast_project_saved: 'Project saved.',
@@ -775,9 +1100,9 @@ const I18N = {
     preview_label: 'معاينة ببيانات حقيقية',
     btn_download_single: 'تنزيل هذا التصميم',
     btn_clear_fields: 'مسح كل الحقول',
-    canvas_hint: '🖱️ اسحب حقلاً من الشريط أعلاه إلى الورقة · <b>انقر</b> على حقل لتحديده ثم استخدم <b>الأسهم</b> لتحريكه بدقة',
+    canvas_hint: '🖱️ اسحب حقلاً من اللوحة الجانبية إلى الورقة · <b>انقر</b> على حقل لتحديده ثم استخدم <b>الأسهم</b> لتحريكه بدقة',
     empty_big: 'سيظهر قالبك هنا',
-    empty_small: 'ارفع صورة من القائمة الجانبية للبدء. بعد رفع ملف CSV ستظهر أسماء الأعمدة كحقول في الشريط العلوي — اسحب ما تريده منها إلى مكانه على القالب.',
+    empty_small: 'ارفع صورة من القائمة الجانبية للبدء. بعد رفع ملف CSV ستظهر أسماء الأعمدة كحقول في اللوحة المجاورة للصفحة — اسحب ما تريده منها إلى مكانه على القالب.',
     cookie_text: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك، وقد تعرض إعلانات Google AdSense إعلانات مخصّصة بناءً عليها. بمتابعة استخدام الموقع فأنت توافق على <a href="privacy-policy.html" target="_blank">سياسة الخصوصية</a>.',
     cookie_accept: 'موافق',
     status_start: 'ارفع صورة القالب وملف البيانات للبدء',
@@ -806,6 +1131,57 @@ const I18N = {
     toast_single_download_ok: 'تم تنزيل هذا التصميم.',
     toast_single_download_err: 'تعذّر تنزيل هذا التصميم.',
     toast_generation_error: 'حدث خطأ أثناء التوليد. راجع وحدة التحكم لمزيد من التفاصيل.',
+    toast_large_batch_warning: 'تم اكتشاف عدد كبير من الصفوف مع قالب عالي الدقة — قد يستغرق هذا وقتاً ويستخدم ذاكرة كبيرة. إذا واجه متصفحك بطئاً، جرّب دفعة أصغر.',
+    mode_upload: 'رفع ملف',
+    mode_manual: 'إدخال يدوي',
+    manual_hint: 'لا حاجة لملف — اكتب أسماء الأعمدة والبيانات مباشرة في الأسفل.',
+    add_column: 'عمود',
+    add_row: 'صف',
+    manual_default_col1: 'الاسم',
+    manual_default_col2: 'التاريخ',
+    manual_new_column: 'عمود',
+    remove_column: 'إزالة هذا العمود',
+    remove_row: 'إزالة هذا الصف',
+    mcp_left: 'تحريك لليسار', mcp_up: 'تحريك للأعلى', mcp_down: 'تحريك للأسفل', mcp_right: 'تحريك لليمين',
+    mcp_font_dec: 'تصغير الخط', mcp_font_inc: 'تكبير الخط', mcp_done: 'تم',
+
+    hiw_eyebrow: 'كيف تعمل الأداة',
+    hiw_title: 'من قالب واحد إلى مئات التصاميم، خلال دقائق',
+    hiw_lead: 'بلا برامج تصميم، وبلا نسخ ولصق يدوي — ارفع مرة واحدة، وأنشئ كل شيء دفعة واحدة، من متصفحك مباشرة.',
+    hiw_step1_title: 'ارفع قالبك',
+    hiw_step1_body: 'تصميم شهادة أو بطاقة أو دعوة بصيغة PNG أو JPG.',
+    hiw_step2_title: 'أضف بياناتك',
+    hiw_step2_body: 'ارفع ملف CSV، أو اكتب الأسماء والقيم مباشرة — بلا حاجة لجدول بيانات.',
+    hiw_step3_title: 'ضع حقولك',
+    hiw_step3_body: 'اسحب كل حقل إلى مكانه على القالب وخصّص خطه وحجمه ولونه.',
+    hiw_step4_title: 'أنشئ ونزّل',
+    hiw_step4_body: 'احصل على كل التصاميم دفعة واحدة كملف ZIP للصور أو ملف PDF واحد.',
+
+    features_eyebrow: 'المميزات',
+    features_title: 'مصمَّمة لتجعل التصميم بالجملة سهلاً',
+    feat1_title: 'مجانية بالكامل', feat1_body: 'بلا اشتراك، وبلا حدود مخفية لعدد الصفوف أو التصاميم.',
+    feat2_title: 'بدون تسجيل', feat2_body: 'افتح الصفحة وابدأ — بلا حساب، وبلا بريد إلكتروني مطلوب.',
+    feat3_title: 'سريعة', feat3_body: 'رسم مباشر داخل المتصفح ينشئ مئات التصاميم خلال ثوانٍ.',
+    feat4_title: 'خصوصية بالتصميم', feat4_body: 'صورك وبياناتك لا تُرفع أبداً لأي خادم.',
+    feat5_title: 'عربي وإنجليزي', feat5_body: 'واجهة ثنائية اللغة بالكامل مع دعم صحيح للكتابة من اليمين لليسار.',
+    feat6_title: 'تصدير ZIP أو PDF', feat6_body: 'نزّل كل شيء كصور منفصلة أو كملف PDF واحد مجمّع.',
+
+    faq_eyebrow: 'الأسئلة الشائعة',
+    faq_title: 'أسئلة شائعة',
+    home_faq1_q: 'هل الأداة مجانية فعلاً؟',
+    home_faq1_a: 'نعم — مجانية للاستخدام بلا حدود على عدد التصاميم التي تنشئها.',
+    home_faq2_q: 'هل تحفظ أو ترفع بياناتي في أي مكان؟',
+    home_faq2_a: 'لا. صورة القالب وبياناتك تُعالَج بالكامل داخل متصفحك ولا تُرسل أبداً إلى أي خادم.',
+    home_faq3_q: 'هل يمكنني استخدامها من الجوال؟',
+    home_faq3_a: 'نعم — تعمل الأداة على الجوال، مع إمكانية إضافة الحقول بالنقر وأزرار تحكم بدل السحب.',
+    home_faq4_q: 'هل أحتاج معرفة Excel أو تنسيق CSV؟',
+    home_faq4_a: 'لا — يمكنك كتابة بياناتك مباشرة في جدول بسيط داخل الأداة، بلا حاجة لأي معرفة بجداول البيانات.',
+    home_faq5_q: 'ما صيغ الملفات التي يمكنني تنزيلها؟',
+    home_faq5_a: 'اختر ملف ZIP يحتوي صوراً منفصلة، أو ملف PDF واحد متعدد الصفحات.',
+
+    footer_privacy: 'سياسة الخصوصية',
+    footer_contact: 'اتصل بنا / الدعم',
+    footer_copy: '© 2026 BulkGallery. جميع الحقوق محفوظة.',
     toast_generation_success: 'تم إنشاء {n} تصميم وتنزيلها في ملف ZIP واحد بنجاح.',
     toast_need_image_before_save: 'ارفع قالباً أولاً قبل الحفظ.',
     toast_project_saved: 'تم حفظ المشروع.',
@@ -829,11 +1205,21 @@ const inputCsv = $('input-csv');
 const inputProject = $('input-project');
 const dzImage = $('dz-image');
 const dzCsv = $('dz-csv');
+const dataModeTabs = $('data-mode-tabs');
+const uploadModePanel = $('upload-mode-panel');
+const manualModePanel = $('manual-mode-panel');
+const manualTableHead = $('manual-table-head');
+const manualTableBody = $('manual-table-body');
+const btnAddColumn = $('btn-add-column');
+const btnAddRow = $('btn-add-row');
+const mobileControlPad = $('mobile-control-pad');
+const mcpLabel = $('mcp-label');
 const imageFilenameEl = $('image-filename');
 const csvFilenameEl = $('csv-filename');
 const dataSummaryEl = $('data-summary');
 const fieldsContainer = $('fields-container');
 const fieldsEmpty = $('fields-empty');
+const step3Container = $('step3-container');
 const canvasStage = $('canvas-stage');
 const emptyCanvas = $('empty-canvas');
 const btnGenerate = $('btn-generate');
@@ -908,6 +1294,7 @@ function applyLanguage(lang){
 
   renderPalette();
   renderFieldControls();
+  if(state.csvHeaders.length > 0) renderManualTable();
   updatePreviewCount();
   updateDataSummary();
   updateGenerateButtonState();
@@ -984,7 +1371,8 @@ inputCsv.addEventListener('change', (e) => handleCsvFile(e.target.files[0]));
 setupDragAndDropZone(dzCsv, handleCsvFile);
 
 function updateDataSummary(){
-  if(state.csvHeaders.length === 0) return;
+  if(state.csvHeaders.length === 0){ dataSummaryEl.classList.remove('show'); return; }
+  dataSummaryEl.classList.add('show');
   dataSummaryEl.innerHTML = t('data_summary', { cols: `<b>${digits(state.csvHeaders.length)}</b>`, rows: `<b>${digits(state.csvRows.length)}</b>` });
 }
 
@@ -1018,6 +1406,156 @@ function parseCsv(text){
     });
   return { headers, rows: dataRows };
 }
+
+// ================================================================
+// MANUAL DATA ENTRY (no CSV / no spreadsheet knowledge required)
+// A small in-app table that reads and writes the exact same
+// state.csvHeaders / state.csvRows the CSV upload path uses, so
+// everything downstream (palette, styling, generation) works
+// identically regardless of where the data came from.
+// ================================================================
+function defaultFieldStyle(){
+  return { fontSize:28, color:'#241F2E', fontFamily:'Cairo', bold:false, italic:false, rotation:0 };
+}
+
+function ensureManualDataSeeded(){
+  if(state.csvHeaders.length > 0) return; // already has data (from CSV or earlier manual edits) — just edit it
+  state.csvHeaders = [t('manual_default_col1'), t('manual_default_col2')];
+  state.csvRows = [{ [state.csvHeaders[0]]: '', [state.csvHeaders[1]]: '' }];
+  state.fieldStyles = {};
+  state.csvHeaders.forEach(h => { state.fieldStyles[h] = defaultFieldStyle(); });
+  state.placed = {};
+  state.csvFilename = '';
+}
+
+function refreshAfterManualDataChange(structural){
+  if(structural){
+    renderManualTable();
+    renderPalette();
+    renderFieldControls();
+    renderTextFieldsOnCanvas();
+  }
+  updateGenerateButtonState();
+  updateDataSummary();
+}
+
+function renameManualColumn(oldName, requestedName){
+  const trimmed = requestedName.trim();
+  if(!trimmed || trimmed === oldName) return oldName;
+  let finalName = trimmed, n = 2;
+  while(state.csvHeaders.includes(finalName)) finalName = `${trimmed} (${n++})`;
+
+  const idx = state.csvHeaders.indexOf(oldName);
+  state.csvHeaders[idx] = finalName;
+  state.csvRows.forEach(row => { row[finalName] = row[oldName]; delete row[oldName]; });
+  if(state.fieldStyles[oldName]){ state.fieldStyles[finalName] = state.fieldStyles[oldName]; delete state.fieldStyles[oldName]; }
+  if(state.placed[oldName]){ state.placed[finalName] = state.placed[oldName]; delete state.placed[oldName]; }
+  if(state.selectedHeader === oldName) state.selectedHeader = finalName;
+  return finalName;
+}
+
+function addManualColumn(){
+  let base = t('manual_new_column'), name = base, n = 2;
+  while(state.csvHeaders.includes(name)) name = `${base} ${n++}`;
+  state.csvHeaders.push(name);
+  state.csvRows.forEach(r => { r[name] = ''; });
+  state.fieldStyles[name] = defaultFieldStyle();
+  refreshAfterManualDataChange(true);
+}
+
+function removeManualColumn(header){
+  if(state.csvHeaders.length <= 1) return; // always keep at least one column
+  state.csvHeaders = state.csvHeaders.filter(h => h !== header);
+  state.csvRows.forEach(r => { delete r[header]; });
+  delete state.fieldStyles[header];
+  delete state.placed[header];
+  if(state.selectedHeader === header) state.selectedHeader = null;
+  refreshAfterManualDataChange(true);
+}
+
+function addManualRow(){
+  const row = {};
+  state.csvHeaders.forEach(h => { row[h] = ''; });
+  state.csvRows.push(row);
+  refreshAfterManualDataChange(true);
+}
+
+function removeManualRow(rowIndex){
+  if(state.csvRows.length <= 1) return; // always keep at least one row
+  state.csvRows.splice(rowIndex, 1);
+  refreshAfterManualDataChange(true);
+}
+
+function renderManualTable(){
+  const headRow = document.createElement('tr');
+  headRow.appendChild(document.createElement('th'));
+  state.csvHeaders.forEach(header => {
+    const th = document.createElement('th');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = header;
+    input.addEventListener('change', () => {
+      renameManualColumn(header, input.value);
+      refreshAfterManualDataChange(true);
+    });
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'manual-col-del';
+    delBtn.textContent = '×';
+    delBtn.title = t('remove_column');
+    delBtn.addEventListener('click', () => removeManualColumn(header));
+    th.style.position = 'relative';
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex'; wrap.style.alignItems = 'center';
+    wrap.appendChild(input); wrap.appendChild(delBtn);
+    th.appendChild(wrap);
+    headRow.appendChild(th);
+  });
+  manualTableHead.innerHTML = '';
+  manualTableHead.appendChild(headRow);
+
+  manualTableBody.innerHTML = '';
+  state.csvRows.forEach((row, rowIndex) => {
+    const tr = document.createElement('tr');
+    const rowDelTd = document.createElement('td');
+    const rowDelBtn = document.createElement('button');
+    rowDelBtn.type = 'button';
+    rowDelBtn.className = 'manual-row-del';
+    rowDelBtn.textContent = '×';
+    rowDelBtn.title = t('remove_row');
+    rowDelBtn.addEventListener('click', () => removeManualRow(rowIndex));
+    rowDelTd.appendChild(rowDelBtn);
+    tr.appendChild(rowDelTd);
+
+    state.csvHeaders.forEach(header => {
+      const td = document.createElement('td');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = row[header] || '';
+      input.dir = 'auto'; // lets each cell follow its own text direction as the user types
+      input.addEventListener('input', () => { row[header] = input.value; });
+      td.appendChild(input);
+      tr.appendChild(td);
+    });
+    manualTableBody.appendChild(tr);
+  });
+}
+
+btnAddColumn.addEventListener('click', addManualColumn);
+btnAddRow.addEventListener('click', addManualRow);
+
+dataModeTabs.querySelectorAll('.data-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    dataModeTabs.querySelectorAll('.data-mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+    const mode = btn.dataset.mode;
+    uploadModePanel.style.display = mode === 'upload' ? 'block' : 'none';
+    manualModePanel.style.display = mode === 'manual' ? 'block' : 'none';
+    if(mode === 'manual'){
+      ensureManualDataSeeded();
+      refreshAfterManualDataChange(true);
+    }
+  });
+});
 
 // ================================================================
 // FILE DRAG & DROP ZONES
@@ -1104,6 +1642,7 @@ function setupCanvasDropTarget(){
     const header = e.dataTransfer.getData('text/plain');
     if(!header || !state.csvHeaders.includes(header)) return;
     const stageRect = canvasStage.getBoundingClientRect();
+    if(stageRect.width < 1 || stageRect.height < 1){ placeField(header, 50, 50); return; }
     const xPct = Math.min(100, Math.max(0, ((e.clientX - stageRect.left) / stageRect.width) * 100));
     const yPct = Math.min(100, Math.max(0, ((e.clientY - stageRect.top) / stageRect.height) * 100));
     placeField(header, xPct, yPct);
@@ -1128,6 +1667,7 @@ function removeField(header){
   renderTextFieldsOnCanvas();
   renderFieldControls();
   updateGenerateButtonState();
+  updateMobileControlPad();
 }
 
 function clearAllFields(){
@@ -1156,8 +1696,10 @@ function renderTextFieldsOnCanvas(){
     applyPositionStyle(el, pos);
     applyTypographyStyle(el, style);
 
-    const textNode = document.createTextNode(currentTextFor(header));
+    const text = currentTextFor(header);
+    const textNode = document.createTextNode(text);
     el.appendChild(textNode);
+    el.style.direction = containsArabic(text) ? 'rtl' : 'ltr';
 
     const removeBtn = document.createElement('span');
     removeBtn.className = 'field-remove-btn';
@@ -1171,6 +1713,44 @@ function renderTextFieldsOnCanvas(){
     makeDraggable(el);
   });
 }
+
+// ================================================================
+// TOUCH-FRIENDLY CONTROL PAD (alternative to dragging — same nudge
+// step as the keyboard arrows, just as physical buttons for phones)
+// ================================================================
+function updateMobileControlPad(){
+  if(state.selectedHeader && state.placed[state.selectedHeader]){
+    mobileControlPad.style.display = 'flex';
+    mcpLabel.textContent = state.selectedHeader;
+  } else {
+    mobileControlPad.style.display = 'none';
+  }
+}
+mobileControlPad.querySelectorAll('.mcp-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const header = state.selectedHeader;
+    if(!header || !state.placed[header]) return;
+    const pos = state.placed[header];
+    const style = state.fieldStyles[header];
+    const action = btn.dataset.action;
+    const step = 1.5;
+
+    if(action === 'deselect'){ deselectField(); return; }
+    if(action === 'left') pos.xPct = Math.max(0, pos.xPct - step);
+    else if(action === 'right') pos.xPct = Math.min(100, pos.xPct + step);
+    else if(action === 'up') pos.yPct = Math.max(0, pos.yPct - step);
+    else if(action === 'down') pos.yPct = Math.min(100, pos.yPct + step);
+    else if(action === 'font-dec') style.fontSize = Math.max(8, style.fontSize - 2);
+    else if(action === 'font-inc') style.fontSize = Math.min(200, style.fontSize + 2);
+
+    const el = canvasStage.querySelector(`.text-field[data-header="${cssEscape(header)}"]`);
+    if(el){
+      if(action === 'font-dec' || action === 'font-inc') applyTypographyStyle(el, style);
+      else applyPositionStyle(el, pos);
+    }
+    renderFieldControls();
+  });
+});
 
 function applyPositionStyle(el, pos){ el.style.left = pos.xPct + '%'; el.style.top = pos.yPct + '%'; }
 function applyTypographyStyle(el, style){
@@ -1191,8 +1771,10 @@ function currentTextFor(header){
 function updateFieldTexts(){
   canvasStage.querySelectorAll('.text-field').forEach(el => {
     const header = el.dataset.header;
+    const text = currentTextFor(header);
     el.childNodes.forEach(n => { if(n.nodeType === Node.TEXT_NODE) n.remove(); });
-    el.insertBefore(document.createTextNode(currentTextFor(header)), el.firstChild);
+    el.insertBefore(document.createTextNode(text), el.firstChild);
+    el.style.direction = containsArabic(text) ? 'rtl' : 'ltr';
   });
 }
 
@@ -1220,6 +1802,7 @@ function makeDraggable(el){
     if(!dragging) return;
     const point = e.touches ? e.touches[0] : e;
     const stageRect = canvasStage.getBoundingClientRect();
+    if(stageRect.width < 1 || stageRect.height < 1) return; // stage not laid out yet — ignore this move rather than produce NaN
     const dxPct = ((point.clientX - startX) / stageRect.width) * 100;
     const dyPct = ((point.clientY - startY) / stageRect.height) * 100;
     let newLeft = originLeftPct + dxPct;
@@ -1259,10 +1842,12 @@ function makeDraggable(el){
 function selectField(header){
   state.selectedHeader = header;
   canvasStage.querySelectorAll('.text-field').forEach(el => { el.classList.toggle('selected', el.dataset.header === header); });
+  updateMobileControlPad();
 }
 function deselectField(){
   state.selectedHeader = null;
   canvasStage.querySelectorAll('.text-field').forEach(el => el.classList.remove('selected'));
+  updateMobileControlPad();
 }
 
 window.addEventListener('keydown', (e) => {
@@ -1410,6 +1995,7 @@ function updateGenerateButtonLabel(){
 // ================================================================
 function updateGenerateButtonState(){
   updateGenerateButtonLabel();
+  step3Container.style.display = state.csvHeaders.length > 0 ? 'block' : 'none';
   const ready = !!state.imageDataUrl && state.csvRows.length > 0;
   btnGenerate.disabled = !ready;
   if(ready){
@@ -1433,19 +2019,19 @@ function updateGenerateButtonState(){
 //  capturing the live DOM and keeps everything running on-device.)
 // ================================================================
 
-// Output resolution is capped adaptively: small templates are still
-// upscaled 2x for crispness, but very large uploads are capped so a
-// single row never produces an oversized canvas that slows every
-// draw + zip/pdf step down. This is the real fix for "slow bulk
-// generation" — the old bottleneck was canvas size, not file loading.
-const MAX_OUTPUT_DIM = 3000;
+// Export always renders at (at least) the template's true original pixel
+// dimensions — never the on-screen display size — so quality never
+// depends on the user's screen. Small templates get a modest upscale
+// so text isn't blurry; large templates are exported at their full
+// native resolution with no artificial downscale cap.
+const MIN_UPSCALE_TARGET = 1600;
 let cachedScale = null;
 function getOutputScale(){
   if(cachedScale !== null) return cachedScale;
   const iw = templateImgEl.naturalWidth || templateImgEl.width;
   const ih = templateImgEl.naturalHeight || templateImgEl.height;
-  const longEdge = Math.max(iw, ih);
-  cachedScale = (longEdge * 2 <= MAX_OUTPUT_DIM) ? 2 : (MAX_OUTPUT_DIM / longEdge);
+  const longEdge = Math.max(iw, ih) || 1;
+  cachedScale = longEdge < MIN_UPSCALE_TARGET ? Math.min(2, MIN_UPSCALE_TARGET / longEdge) : 1;
   return cachedScale;
 }
 
@@ -1495,6 +2081,7 @@ function renderRowToCanvas(row){
     const italic = style.italic ? 'italic' : 'normal';
     ctx.font = `${italic} ${weight} ${Math.round(style.fontSize * scale)}px "${style.fontFamily}"`;
     ctx.fillStyle = style.color;
+    ctx.direction = containsArabic(text) ? 'rtl' : 'ltr';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, 0, 0);
@@ -1505,6 +2092,19 @@ function renderRowToCanvas(row){
 }
 function canvasToBlob(canvas){ return new Promise(resolve => canvas.toBlob(resolve, 'image/png')); }
 function yieldToUI(){ return new Promise(r => requestAnimationFrame(r)); }
+// Explicitly drop the canvas's pixel buffer as soon as we're done with it,
+// instead of waiting for garbage collection — this matters a lot when
+// generating hundreds of full-resolution images in a row, since holding
+// many large canvases in memory simultaneously is what crashes the tab.
+function freeCanvas(canvas){ canvas.width = 0; canvas.height = 0; }
+// Warn (without blocking) before very large, high-resolution batches that
+// could strain a typical device's memory — an honest heads-up rather than
+// a false promise that any size will always work.
+function maybeWarnLargeBatch(total, canvasPixels){
+  if(total > 250 && canvasPixels > 4_000_000){
+    showToast(t('toast_large_batch_warning'));
+  }
+}
 
 async function downloadCurrentPreview(){
   if(state.previewRowIndex < 0 || !templateImgEl) return;
@@ -1549,11 +2149,14 @@ async function runBulkGenerationZip(){
       overlayFill.style.width = `${Math.round((i / total) * 92)}%`;
 
       const canvas = renderRowToCanvas(row);
+      if(i === 0) maybeWarnLargeBatch(total, canvas.width * canvas.height);
       const blob = await canvasToBlob(canvas);
       const filenameBase = sanitizeFilename(row[nameKey] || `${t('row_word')}_${i+1}`);
       zip.file(`${filenameBase}_${i+1}.png`, blob);
+      const bigCanvas = canvas.width * canvas.height > 4_000_000;
+      freeCanvas(canvas);
 
-      if(i % 5 === 0) await yieldToUI(); // keep the progress UI responsive without slowing things down
+      if(bigCanvas || i % 8 === 0) await yieldToUI(); // give the browser room to reclaim memory + repaint progress
     }
 
     overlayText.textContent = t('overlay_compressing');
@@ -1596,6 +2199,7 @@ async function runBulkGenerationPDF(){
       overlayFill.style.width = `${Math.round((i / total) * 92)}%`;
 
       const canvas = renderRowToCanvas(row);
+      if(i === 0) maybeWarnLargeBatch(total, canvas.width * canvas.height);
       // JPEG keeps the PDF a reasonable size across many pages; quality
       // 0.92 is visually lossless for certificate-style flat artwork.
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
@@ -1607,8 +2211,10 @@ async function runBulkGenerationPDF(){
         pdf.addPage([canvas.width, canvas.height], orientation);
       }
       pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+      const bigCanvas = canvas.width * canvas.height > 4_000_000;
+      freeCanvas(canvas);
 
-      if(i % 5 === 0) await yieldToUI();
+      if(bigCanvas || i % 8 === 0) await yieldToUI();
     }
 
     overlayText.textContent = t('overlay_compressing');
